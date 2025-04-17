@@ -9,6 +9,7 @@ const nextConfig = {
   basePath: '/Lexicon',
   assetPrefix: '/Lexicon/',
   trailingSlash: true,
+  distDir: 'out',
 }
 
 module.exports = nextConfig 
