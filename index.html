@@ -130,6 +130,20 @@
 
         // Playing screen
         function renderPlayingScreen() {
+            // Group letters by their position in a QWERTY keyboard
+            const qwertyLayout = {
+                'Q': [], 'W': [], 'E': [], 'R': [], 'T': [], 'Y': [], 'U': [], 'I': [], 'O': [], 'P': [],
+                'A': [], 'S': [], 'D': [], 'F': [], 'G': [], 'H': [], 'J': [], 'K': [], 'L': [],
+                'Z': [], 'X': [], 'C': [], 'V': [], 'B': [], 'N': [], 'M': []
+            };
+
+            // Group letters by their value
+            gameState.letters.forEach((letter, index) => {
+                if (qwertyLayout[letter]) {
+                    qwertyLayout[letter].push(index);
+                }
+            });
+
             return `
                 <div class="space-y-6">
                     <div class="flex justify-between items-center">
@@ -149,17 +163,61 @@
                             +${gameState.timeBonus}s
                         </div>
                     ` : ''}
-                    <div class="flex flex-wrap gap-2 justify-center">
-                        ${gameState.letters.map((letter, index) => `
-                            <button 
-                                onclick="handleLetterClick(${index})"
-                                class="w-12 h-12 ${gameState.usedLetters.has(index) ? 'bg-gray-200 text-gray-400' : 'bg-blue-100 text-blue-600 hover:bg-blue-200'} 
-                                    font-bold rounded-lg shadow transition ${gameState.selectedLetter === index ? 'scale-110 rotate-6' : ''}"
-                            >
-                                ${letter}
-                            </button>
-                        `).join('')}
+                    
+                    <!-- QWERTY Keyboard Layout -->
+                    <div class="flex flex-col items-center space-y-2">
+                        <!-- Top Row -->
+                        <div class="flex space-x-1">
+                            ${['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'].map(letter => `
+                                <div class="flex space-x-1">
+                                    ${qwertyLayout[letter].map(index => `
+                                        <button 
+                                            onclick="handleLetterClick(${index})"
+                                            class="w-10 h-10 ${gameState.usedLetters.has(index) ? 'bg-gray-200 text-gray-400' : 'bg-blue-100 text-blue-600 hover:bg-blue-200'} 
+                                                font-bold rounded-lg shadow transition ${gameState.selectedLetter === index ? 'scale-110 rotate-6' : ''}"
+                                        >
+                                            ${letter}
+                                        </button>
+                                    `).join('')}
+                                </div>
+                            `).join('')}
+                        </div>
+                        
+                        <!-- Middle Row -->
+                        <div class="flex space-x-1 ml-4">
+                            ${['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'].map(letter => `
+                                <div class="flex space-x-1">
+                                    ${qwertyLayout[letter].map(index => `
+                                        <button 
+                                            onclick="handleLetterClick(${index})"
+                                            class="w-10 h-10 ${gameState.usedLetters.has(index) ? 'bg-gray-200 text-gray-400' : 'bg-blue-100 text-blue-600 hover:bg-blue-200'} 
+                                                font-bold rounded-lg shadow transition ${gameState.selectedLetter === index ? 'scale-110 rotate-6' : ''}"
+                                        >
+                                            ${letter}
+                                        </button>
+                                    `).join('')}
+                                </div>
+                            `).join('')}
+                        </div>
+                        
+                        <!-- Bottom Row -->
+                        <div class="flex space-x-1 ml-8">
+                            ${['Z', 'X', 'C', 'V', 'B', 'N', 'M'].map(letter => `
+                                <div class="flex space-x-1">
+                                    ${qwertyLayout[letter].map(index => `
+                                        <button 
+                                            onclick="handleLetterClick(${index})"
+                                            class="w-10 h-10 ${gameState.usedLetters.has(index) ? 'bg-gray-200 text-gray-400' : 'bg-blue-100 text-blue-600 hover:bg-blue-200'} 
+                                                font-bold rounded-lg shadow transition ${gameState.selectedLetter === index ? 'scale-110 rotate-6' : ''}"
+                                        >
+                                            ${letter}
+                                        </button>
+                                    `).join('')}
+                                </div>
+                            `).join('')}
+                        </div>
                     </div>
+
                     <div class="flex flex-wrap gap-2 justify-center min-h-12">
                         ${gameState.currentWord.map((letter, index) => `
                             <span class="text-2xl font-bold text-blue-600 animate-bounce" style="animation-delay: ${index * 0.1}s">
