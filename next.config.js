@@ -1,15 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,
-  swcMinify: true,
   output: 'export',
   images: {
     unoptimized: true,
   },
-  basePath: '/Lexicon',
-  assetPrefix: '/Lexicon/',
-  trailingSlash: true,
-  distDir: 'out',
+  basePath: process.env.NODE_ENV === 'production' ? '/Lexicon' : '',
+  assetPrefix: process.env.NODE_ENV === 'production' ? '/Lexicon/' : '',
 }
 
 module.exports = nextConfig 
