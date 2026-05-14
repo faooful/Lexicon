@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lexicon</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #101211;
+      --surface: #171b19;
+      --surface-2: #202720;
+      --surface-3: #2a302a;
+      --ink: #f4f2ea;
+      --muted: #b8bdb2;
+      --quiet: #7d8679;
+      --line: rgba(244, 242, 234, 0.13);
+      --line-strong: rgba(244, 242, 234, 0.23);
+      --gold: #e4b84e;
+      --green: #78bd7d;
+      --blue: #75a9d7;
+      --red: #dc7565;
+      --tile: #f1efe6;
+      --tile-ink: #171a16;
+      --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --mono: "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { min-height: 100%; }
+
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at 18% -10%, rgba(228, 184, 78, 0.18), transparent 34vw),
+        linear-gradient(180deg, rgba(120, 189, 125, 0.06), transparent 360px),
+        var(--bg);
+      color: var(--ink);
+      font: 15px/1.45 var(--sans);
+      letter-spacing: 0;
+    }
+
+    button, input, select {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+    }
+
+    .app {
+      width: min(1220px, calc(100vw - 28px));
+      min-height: 100vh;
+      margin: 0 auto;
+      padding: 26px 0 34px;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: 18px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 18px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--line-strong);
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: clamp(36px, 7vw, 72px);
+      line-height: 0.92;
+      font-weight: 850;
+    }
+
+    .brand p {
+      max-width: 620px;
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 16px;
+    }
+
+    .hud {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(86px, 1fr));
+      gap: 8px;
+      min-width: min(100%, 340px);
+    }
+
+    .stat {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(23, 27, 25, 0.82);
+      padding: 10px 12px;
+    }
+
+    .stat span {
+      display: block;
+      color: var(--quiet);
+      font: 750 11px/1 var(--mono);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .stat strong {
+      display: block;
+      margin-top: 7px;
+      font-size: 21px;
+      line-height: 1;
+    }
+
+    .game {
+      display: grid;
+      grid-template-columns: minmax(230px, 0.78fr) minmax(320px, 1.08fr) minmax(260px, 0.84fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(23, 27, 25, 0.9);
+      padding: 16px;
+    }
+
+    .panel h2 {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.1;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-family: var(--mono);
+      color: var(--muted);
+    }
+
+    .status {
+      min-height: 84px;
+      margin-top: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #0f1110;
+      padding: 13px;
+    }
+
+    .status strong {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--ink);
+      font-size: 18px;
+      line-height: 1.2;
+    }
+
+    .status span {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .status.good { border-color: rgba(120, 189, 125, 0.45); }
+    .status.bad { border-color: rgba(220, 117, 101, 0.42); }
+    .status.ready { border-color: rgba(228, 184, 78, 0.46); }
+
+    .dice {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(86px, 1fr));
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .die {
+      position: relative;
+      display: grid;
+      grid-template-rows: auto minmax(38px, 1fr) auto;
+      align-items: center;
+      min-width: 0;
+      min-height: 96px;
+      border: 1px solid rgba(244, 242, 234, 0.32);
+      border-radius: 12px;
+      background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(218, 214, 200, 0.96)),
+        var(--tile);
+      color: var(--tile-ink);
+      cursor: pointer;
+      font-weight: 850;
+      line-height: 1;
+      padding: 8px;
+      box-shadow:
+        inset 0 -9px 0 rgba(0, 0, 0, 0.13),
+        inset 0 1px 0 rgba(255, 255, 255, 0.72),
+        0 10px 20px rgba(0, 0, 0, 0.2);
+      transition: transform 0.08s, border-color 0.12s, opacity 0.12s, box-shadow 0.12s;
+    }
+
+    .die:hover { transform: translateY(-1px); }
+    .die.selected {
+      border-color: var(--gold);
+      box-shadow:
+        0 0 0 2px rgba(228, 184, 78, 0.34),
+        inset 0 -9px 0 rgba(0, 0, 0, 0.13),
+        inset 0 1px 0 rgba(255, 255, 255, 0.72),
+        0 12px 24px rgba(0, 0, 0, 0.28);
+    }
+
+    .die.used {
+      opacity: 0.46;
+      cursor: default;
+      transform: none;
+    }
+
+    .die.wild {
+      background:
+        linear-gradient(145deg, #ffe38a, #dcae30);
+      color: #775807;
+      border-color: rgba(228, 184, 78, 0.8);
+    }
+
+    .die.has-wild {
+      border-color: rgba(228, 184, 78, 0.72);
+      box-shadow:
+        inset 0 -9px 0 rgba(0, 0, 0, 0.13),
+        inset 0 1px 0 rgba(255, 255, 255, 0.72),
+        0 0 0 2px rgba(228, 184, 78, 0.16),
+        0 10px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .die.mutated::after {
+      content: "";
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 0 3px rgba(120, 189, 125, 0.2);
+    }
+
+    .die-id {
+      justify-self: start;
+      min-height: 18px;
+      border-radius: 999px;
+      background: rgba(23, 26, 22, 0.1);
+      color: rgba(23, 26, 22, 0.68);
+      padding: 4px 7px 0;
+      font: 900 10px/1 var(--mono);
+      letter-spacing: 0.05em;
+    }
+
+    .die-face {
+      display: grid;
+      place-items: center;
+      min-height: 42px;
+      font-size: clamp(30px, 5vw, 42px);
+      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+    }
+
+    .die-faces {
+      width: 100%;
+      overflow: hidden;
+      text-align: center;
+      color: rgba(23, 26, 22, 0.58);
+      font: 850 9px/1.15 var(--mono);
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      letter-spacing: 0.02em;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .btn {
+      min-height: 42px;
+      border: 1px solid var(--line-strong);
+      border-radius: 8px;
+      background: var(--surface-2);
+      color: var(--ink);
+      cursor: pointer;
+      font-weight: 760;
+    }
+
+    .btn:hover:not(:disabled) { background: var(--surface-3); }
+    .btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.45;
+    }
+
+    .btn.primary {
+      border-color: rgba(228, 184, 78, 0.46);
+      background: rgba(228, 184, 78, 0.17);
+      color: #f6d982;
+    }
+
+    .hint {
+      margin: 12px 0 0;
+      color: var(--quiet);
+      font-size: 13px;
+    }
+
+    .board-wrap {
+      display: grid;
+      gap: 14px;
+      justify-items: center;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 7px;
+      width: min(100%, 430px);
+      touch-action: manipulation;
+    }
+
+    .cell {
+      display: grid;
+      place-items: center;
+      aspect-ratio: 1;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: rgba(255, 255, 255, 0.035);
+      color: var(--ink);
+      cursor: pointer;
+      font-size: clamp(24px, 6vw, 44px);
+      font-weight: 850;
+      line-height: 1;
+      transition: background 0.12s, border-color 0.12s, transform 0.08s;
+    }
+
+    .cell:hover { border-color: rgba(244, 242, 234, 0.36); }
+    .cell.filled {
+      background: var(--tile);
+      color: var(--tile-ink);
+      border-color: rgba(244, 242, 234, 0.42);
+      box-shadow: inset 0 -5px 0 rgba(0, 0, 0, 0.13);
+    }
+
+    .cell.intersection {
+      outline: 2px solid rgba(117, 169, 215, 0.45);
+      outline-offset: -4px;
+    }
+
+    .cell.invalid {
+      border-color: rgba(220, 117, 101, 0.65);
+      box-shadow: inset 0 -5px 0 rgba(0, 0, 0, 0.13), 0 0 0 2px rgba(220, 117, 101, 0.18);
+    }
+
+    .cell.wild {
+      background: #f1cc62;
+      color: #775807;
+    }
+
+    .word-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .word {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #101210;
+      padding: 10px 11px;
+    }
+
+    .word b {
+      font-family: var(--mono);
+      letter-spacing: 0.08em;
+    }
+
+    .word span {
+      color: var(--quiet);
+      font-size: 13px;
+    }
+
+    .word.bad {
+      border-color: rgba(220, 117, 101, 0.42);
+      color: #f0a095;
+    }
+
+    .breakdown {
+      display: grid;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 8px;
+      color: var(--muted);
+    }
+
+    .row:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .row strong {
+      color: var(--ink);
+    }
+
+    .upgrades {
+      position: fixed;
+      inset: 0;
+      display: none;
+      place-items: center;
+      z-index: 20;
+      background: rgba(8, 10, 9, 0.72);
+      padding: 18px;
+    }
+
+    .upgrades.show { display: grid; }
+
+    .upgrade-box {
+      width: min(760px, 100%);
+      border: 1px solid var(--line-strong);
+      border-radius: 8px;
+      background: #151917;
+      padding: 18px;
+      box-shadow: 0 28px 70px rgba(0, 0, 0, 0.42);
+    }
+
+    .upgrade-box h2 {
+      margin: 0;
+      font-size: clamp(26px, 6vw, 44px);
+      line-height: 1;
+    }
+
+    .upgrade-box p {
+      margin: 8px 0 0;
+      color: var(--muted);
+    }
+
+    .upgrade-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .upgrade {
+      min-height: 150px;
+      text-align: left;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--ink);
+      padding: 14px;
+      cursor: pointer;
+    }
+
+    .upgrade:hover {
+      border-color: rgba(228, 184, 78, 0.5);
+      background: var(--surface-2);
+    }
+
+    .upgrade span {
+      display: inline-flex;
+      min-height: 24px;
+      align-items: center;
+      margin-bottom: 12px;
+      border-radius: 999px;
+      background: #0f1110;
+      color: var(--gold);
+      padding: 0 9px;
+      font: 800 10px/1 var(--mono);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .upgrade strong {
+      display: block;
+      font-size: 18px;
+      line-height: 1.16;
+    }
+
+    .upgrade em {
+      display: block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-style: normal;
+      font-size: 13px;
+      line-height: 1.36;
+    }
+
+    .wild-picker {
+      display: none;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+      margin-top: 12px;
+    }
+
+    .wild-picker.show { display: grid; }
+
+    .letter-pick {
+      min-height: 34px;
+      border-radius: 7px;
+      background: #f1cc62;
+      color: #775807;
+      cursor: pointer;
+      font-weight: 850;
+    }
+
+    @media (max-width: 980px) {
+      .topbar {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .game {
+        grid-template-columns: 1fr;
+      }
+
+      .panel.board-panel {
+        order: -1;
+      }
+
+      .board {
+        width: min(100%, 380px);
+      }
+    }
+
+    @media (max-width: 640px) {
+      .app {
+        width: min(100vw - 18px, 1220px);
+        padding-top: 16px;
+      }
+
+      .hud,
+      .upgrade-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .dice {
+        grid-template-columns: repeat(4, 1fr);
+      }
+
+      .controls {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div class="brand">
+        <h1>Lexicon</h1>
+        <p>Build one connected crossword from every die. The round ends the instant the board becomes valid.</p>
+      </div>
+      <div class="hud" aria-label="Run stats">
+        <div class="stat"><span>Round</span><strong id="roundStat">1</strong></div>
+        <div class="stat"><span>Score</span><strong id="scoreStat">0</strong></div>
+        <div class="stat"><span>Target</span><strong id="targetStat">24</strong></div>
+      </div>
+    </header>
+
+    <section class="game">
+      <aside class="panel">
+        <h2>Roll</h2>
+        <div id="status" class="status ready">
+          <strong>Make a crossword</strong>
+          <span>Select a die, then click a board cell.</span>
+        </div>
+        <div class="dice" id="diceTray" aria-label="Dice tray"></div>
+        <div class="wild-picker" id="wildPicker" aria-label="Wildcard letter picker"></div>
+        <div class="controls">
+          <button class="btn primary" id="rerollBtn">Reroll 1</button>
+          <button class="btn" id="clearBtn">Clear Board</button>
+          <button class="btn" id="newRunBtn">New Run</button>
+          <button class="btn" id="hintBtn">Seed Solve</button>
+        </div>
+        <p class="hint">Click placed tiles to pull them back. Wildcards choose a letter before placement.</p>
+      </aside>
+
+      <section class="panel board-panel">
+        <h2>Board</h2>
+        <div class="board-wrap">
+          <div class="board" id="board" aria-label="5 by 5 crossword board"></div>
+        </div>
+      </section>
+
+      <aside class="panel">
+        <h2>Validation</h2>
+        <div class="word-list" id="wordList"></div>
+        <div class="breakdown" id="breakdown"></div>
+      </aside>
+    </section>
+  </main>
+
+  <div class="upgrades" id="upgradeModal" role="dialog" aria-modal="true" aria-labelledby="upgradeTitle">
+    <div class="upgrade-box">
+      <h2 id="upgradeTitle">Round Complete</h2>
+      <p id="upgradeSummary">Choose one upgrade. Difficulty rises next round.</p>
+      <div class="upgrade-grid" id="upgradeGrid"></div>
+    </div>
+  </div>
+
+  <script>
+    const BOARD_SIZE = 5;
+    const RARE = new Set(["J", "Q", "X", "Z", "K", "V", "W", "Y"]);
+    const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+
+    const WORDS = new Set(`
+      ACE ACED ACES ACHE ACID ACORN ACT ACTS ADD AGE AGES AIR AIRE ALERT ALONE ALSO ALTER AMBER ANCHOR AND ANEW
+      ANT ANTE APE APEX ARC AREA ARENA ARM ARMS ART ARTS ASH ASHEN ATOM AURA AVID AXE AXES
+      BAD BAKE BAKER BARK BARN BASE BASED BASIC BAST BAT BATH BEAD BEAM BEAN BEAR BEARD BEAST BEAT BEATS BEND BENT
+      BIRD BITE BLACK BLADE BLEND BOLD BONE BONES BORN BREAD BREAK BRICK BRIDGE BRINE BRING BROAD BROKE BROWN BURN
+      CAB CABLE CAGE CAKE CALM CAMP CAN CANE CARED CARGO CART CASE CAST CAVE CEDAR CHAIN CHAIR CHALK CHARM CHART
+      CHASE CHEST CHIME CLAY CLEAN CLEAR CLERK CLIMB CLOCK CLONE CLOSE CLOUD COAST CODE COLD CONE CORD CORE CORN
+      CRANE CRATE CREAM CROWN CURE CURVE
+      DARE DARK DART DATE DAWN DEAL DEAR DECK DEER DICE DINE DIRT DIVE DOCK DOME DONE DOOR DOVE DRAG DRAIN DRAW
+      DREAM DUNE DUSK
+      EAGER EARN EARTH EAST EAT ECHO EDGE EEL ELM EMBER END ENTER EON EROS EVER EVIL EXACT EXIT
+      FACE FACT FADE FAIR FARM FAST FATE FERN FIELD FILE FINE FIRE FIRM FISH FIVE FLAME FLARE FLEET FLOOD FLOOR
+      FLOW FLOWER FOCUS FOLD FORCE FORGE FORM FRAME FRESH FROST
+      GAME GATE GEAR GHOST GLADE GLASS GLOW GOAL GOLD GONE GRAIN GRAPE GRAPH GRASS GRAVE GREAT GREEN GRID GRIN GROVE
+      HAIL HAIR HAND HARBOR HARD HARE HARM HARP HASTE HAT HATE HAZE HEAL HEAR HEART HEAT HELM HERB HILL HIVE HOME
+      HONEY HOPE HORN HORSE HOST HOUSE
+      ICE ICED ICON IDEA IDLE IMAGE INDEX INK IRON ISLE IVY
+      JADE JAR JAZZ JEST JOIN JOLT JUMP JUNE JUNK
+      KEEN KEEP KITE KNEAD KNEE KNIFE KNOT
+      LACE LAKE LANE LARK LAST LATE LEAF LEAN LEARN LEMON LEND LENS LEXICON LIME LINE LION LIST LONE LONG LOOM
+      LOOP LORD LORE LOSE LOST LOVE
+      MAGE MAIL MAIN MAKE MARCH MARK MARS MATE MAZE MEAL MEAN MEND MENTOR MILE MIND MINE MINT MIST MODE MOON MORE
+      MORN MOUSE MOVE MUSE
+      NAME NEAR NEAT NEST NEWT NIGHT NODE NOISE NORTH NOTE NOVA
+      OAK OAR OASIS OCEAN ODOR OLIVE ONCE OPAL OPEN ORBIT ORDER ORE ORGAN OTHER OVEN
+      PACE PAGE PAIR PALE PANEL PARK PART PASTE PATH PEAK PEAR PINE PLAIN PLANE PLANT PLATE PLAY PLOT POEM POINT
+      POND PORT POST PRIDE PRIME PRINT PROOF
+      QUART QUEEN QUEST QUICK QUIET QUILL
+      RACE RAIN RAISE RAKE RANK RARE RATE RAVEN REACH READ READY REAL REALM REED REND REST RICE RICH RING RIPE
+      RISE ROAD ROAM ROAST ROBE ROCK RODE ROLL ROOT ROSE ROUND ROUTE
+      SAGE SAIL SALT SAME SAND SAVE SCAR SCALE SCORE SEAL SEAM SEAT SEED SEEK SEEN SENSE SHADE SHALE SHAPE SHARE
+      SHARP SHEAR SHEET SHELF SHINE SHORE SHORT SILK SINK SITE SLATE SLEEP SLICE SLOPE SMILE SMOKE SNAKE SOLAR SOLVE
+      SONG SORT SOUND SPACE SPARE SPARK SPEAR SPICE SPIRE SPORE STACK STAGE STAIR STAKE STALE STAND STARE STARK START
+      STEAM STEEL STEER STEM STEP STONE STORE STORM STORY STRAP STREAM STREET STRING STRONG SUN SWAN SWEAR SWEET
+      TACK TAIL TAKE TALE TALK TAME TANK TAPE TASK TEAM TEAR TEND TENT TERM TEST TEXT THAN THORN THREAD THREE TIDE
+      TILE TIME TONE TOOL TRACE TRACK TRADE TRAIL TRAIN TREAD TREE TRIAL TRIBE TRICK TRUE TUNE TURN
+      VALE VASE VAST VEIL VEIN VINE VITAL VOID VOTE
+      WADE WAGE WAKE WALL WAND WARM WAVE WEAR WEST WHEEL WIDE WILD WIND WINE WING WIRE WISE WOLF WORD WORLD WORTH
+      YARD YARN YEAR YIELD YOUNG
+      ZEAL ZERO ZONE
+    `.trim().split(/\s+/));
+
+    const SOLVE_MAPS = [
+      [
+        { r: 1, c: 0, l: "S" }, { r: 1, c: 1, l: "T" }, { r: 1, c: 2, l: "O" }, { r: 1, c: 3, l: "N" }, { r: 1, c: 4, l: "E" },
+        { r: 2, c: 0, l: "A" }, { r: 3, c: 0, l: "L" }, { r: 4, c: 0, l: "T" }
+      ],
+      [
+        { r: 1, c: 0, l: "C" }, { r: 1, c: 1, l: "R" }, { r: 1, c: 2, l: "A" }, { r: 1, c: 3, l: "N" }, { r: 1, c: 4, l: "E" },
+        { r: 2, c: 2, l: "R" }, { r: 3, c: 2, l: "T" }, { r: 0, c: 2, l: "A" }
+      ],
+      [
+        { r: 1, c: 0, l: "P" }, { r: 1, c: 1, l: "L" }, { r: 1, c: 2, l: "A" }, { r: 1, c: 3, l: "N" }, { r: 1, c: 4, l: "T" },
+        { r: 0, c: 2, l: "E" }, { r: 2, c: 2, l: "A" }, { r: 3, c: 2, l: "R" }
+      ],
+      [
+        { r: 1, c: 0, l: "S" }, { r: 1, c: 1, l: "C" }, { r: 1, c: 2, l: "A" }, { r: 1, c: 3, l: "L" }, { r: 1, c: 4, l: "E" },
+        { r: 0, c: 2, l: "R" }, { r: 2, c: 2, l: "M" }, { r: 3, c: 2, l: "A" }
+      ],
+      [
+        { r: 1, c: 0, l: "G" }, { r: 1, c: 1, l: "R" }, { r: 1, c: 2, l: "A" }, { r: 1, c: 3, l: "P" }, { r: 1, c: 4, l: "E" },
+        { r: 0, c: 2, l: "T" }, { r: 2, c: 2, l: "R" }, { r: 3, c: 2, l: "A" }
+      ],
+      [
+        { r: 1, c: 0, l: "F" }, { r: 1, c: 1, l: "L" }, { r: 1, c: 2, l: "A" }, { r: 1, c: 3, l: "M" }, { r: 1, c: 4, l: "E" },
+        { r: 0, c: 2, l: "R" }, { r: 2, c: 2, l: "A" }, { r: 3, c: 2, l: "K" }
+      ]
+    ];
+
+    const STARTING_DICE_FACES = [
+      ["S", "A", "R", "T", "E", "N"],
+      ["T", "E", "A", "O", "L", "R"],
+      ["O", "A", "I", "N", "C", "D"],
+      ["N", "R", "E", "S", "T", "M"],
+      ["E", "O", "A", "L", "P", "H"],
+      ["A", "I", "U", "E", "Y", "O"],
+      ["L", "C", "R", "S", "D", "G"],
+      ["T", "N", "M", "K", "P", "B"]
+    ];
+
+    const ADD_DIE_FACES = [
+      ["A", "E", "I", "O", "N", "R"],
+      ["S", "T", "L", "C", "D", "M"],
+      ["P", "B", "G", "F", "W", "Y"],
+      ["H", "V", "K", "J", "X", "Z"]
+    ];
+
+    const baseDice = STARTING_DICE_FACES.map((faces, i) => ({
+      id: i + 1,
+      faces: [...faces],
+      wild: false,
+      upgrades: []
+    }));
+
+    let state = {};
+    const els = {
+      round: document.getElementById("roundStat"),
+      score: document.getElementById("scoreStat"),
+      target: document.getElementById("targetStat"),
+      status: document.getElementById("status"),
+      tray: document.getElementById("diceTray"),
+      board: document.getElementById("board"),
+      wordList: document.getElementById("wordList"),
+      breakdown: document.getElementById("breakdown"),
+      reroll: document.getElementById("rerollBtn"),
+      clear: document.getElementById("clearBtn"),
+      newRun: document.getElementById("newRunBtn"),
+      hint: document.getElementById("hintBtn"),
+      modal: document.getElementById("upgradeModal"),
+      upgradeGrid: document.getElementById("upgradeGrid"),
+      upgradeSummary: document.getElementById("upgradeSummary"),
+      wildPicker: document.getElementById("wildPicker")
+    };
+
+    function cloneDice() {
+      return baseDice.map(die => ({ id: die.id, faces: [...die.faces], wild: die.wild, upgrades: [...die.upgrades] }));
+    }
+
+    function newRun() {
+      state = {
+        round: 1,
+        score: 0,
+        target: 24,
+        rerollsBase: 1,
+        rerolls: 1,
+        nextDieId: baseDice.length + 1,
+        dice: cloneDice(),
+        roll: [],
+        board: emptyBoard(),
+        selectedDie: null,
+        pendingWild: null,
+        locked: false,
+        upgrades: {
+          intersectionBonus: 0,
+          fiveBonus: 0,
+          rareBonus: 0,
+          consonantBonus: 0
+        },
+        lastValidation: null,
+        lastScore: null
+      };
+      startRound();
+    }
+
+    function emptyBoard() {
+      return Array.from({ length: BOARD_SIZE }, () => Array.from({ length: BOARD_SIZE }, () => null));
+    }
+
+    function startRound() {
+      state.board = emptyBoard();
+      state.selectedDie = null;
+      state.pendingWild = null;
+      state.locked = false;
+      state.rerolls = state.rerollsBase;
+      state.roll = rollDice();
+      els.modal.classList.remove("show");
+      render();
+      validateAndMaybeComplete();
+    }
+
+    function rollDice() {
+      return state.dice.map(die => {
+        const letter = die.faces[Math.floor(Math.random() * die.faces.length)];
+        return {
+          id: `${state.round}-${die.id}-${Math.random().toString(36).slice(2)}`,
+          dieId: die.id,
+          face: letter,
+          letter,
+          assigned: letter === "*" ? "" : letter,
+          used: false
+        };
+      });
+    }
+
+    function render() {
+      els.round.textContent = state.round;
+      els.score.textContent = state.score;
+      els.target.textContent = state.target;
+      els.reroll.textContent = `Reroll ${state.rerolls}`;
+      els.reroll.disabled = state.rerolls <= 0 || state.locked;
+      renderDice();
+      renderBoard();
+      renderWildcardPicker();
+      renderValidation();
+    }
+
+    function renderDice() {
+      els.tray.innerHTML = "";
+      state.roll.forEach((die, index) => {
+        const source = state.dice.find(d => d.id === die.dieId);
+        const faceText = source ? source.faces.join(" ") : "";
+        const isMutated = source && (source.upgrades.length > 0 || source.faces.length > 6);
+        const btn = document.createElement("button");
+        btn.className = `die${die.face === "*" ? " wild" : ""}${source?.wild ? " has-wild" : ""}${isMutated ? " mutated" : ""}${die.used ? " used" : ""}${state.selectedDie === index ? " selected" : ""}`;
+        btn.type = "button";
+        btn.disabled = die.used || state.locked;
+        btn.title = `D${die.dieId}: ${faceText}`;
+        btn.innerHTML = `
+          <span class="die-id">D${die.dieId}</span>
+          <span class="die-face">${die.face === "*" ? (die.assigned || "*") : die.letter}</span>
+          <span class="die-faces">${faceText}</span>
+        `;
+        btn.addEventListener("click", () => selectDie(index));
+        els.tray.appendChild(btn);
+      });
+    }
+
+    function renderBoard() {
+      els.board.innerHTML = "";
+      const intersections = findIntersections();
+      const invalidCells = new Set((state.lastValidation?.invalidCells || []).map(posKey));
+      for (let r = 0; r < BOARD_SIZE; r++) {
+        for (let c = 0; c < BOARD_SIZE; c++) {
+          const cell = state.board[r][c];
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "cell";
+          if (cell) {
+            btn.classList.add("filled");
+            if (cell.face === "*") btn.classList.add("wild");
+            if (intersections.has(posKey({ r, c }))) btn.classList.add("intersection");
+            if (invalidCells.has(posKey({ r, c }))) btn.classList.add("invalid");
+            btn.textContent = cell.assigned || "*";
+          } else {
+            btn.textContent = "";
+          }
+          btn.addEventListener("click", () => onCellClick(r, c));
+          els.board.appendChild(btn);
+        }
+      }
+    }
+
+    function renderWildcardPicker() {
+      els.wildPicker.innerHTML = "";
+      const selected = state.selectedDie === null ? null : state.roll[state.selectedDie];
+      const show = selected && selected.face === "*" && !selected.used && !state.locked;
+      els.wildPicker.classList.toggle("show", Boolean(show));
+      if (!show) return;
+      LETTERS.forEach(letter => {
+        const btn = document.createElement("button");
+        btn.className = "letter-pick";
+        btn.type = "button";
+        btn.textContent = letter;
+        btn.addEventListener("click", () => {
+          selected.assigned = letter;
+          render();
+        });
+        els.wildPicker.appendChild(btn);
+      });
+    }
+
+    function renderValidation() {
+      const validation = state.lastValidation;
+      els.wordList.innerHTML = "";
+      els.breakdown.innerHTML = "";
+
+      if (!validation || validation.words.length === 0) {
+        els.wordList.innerHTML = `<div class="word"><b>No words yet</b><span>Build runs of 3 or more.</span></div>`;
+      } else {
+        validation.words.forEach(word => {
+          const row = document.createElement("div");
+          row.className = `word${word.valid ? "" : " bad"}`;
+          row.innerHTML = `<b>${word.text}</b><span>${word.valid ? "valid" : "unknown"}</span>`;
+          els.wordList.appendChild(row);
+        });
+      }
+
+      if (validation?.fragments.length) {
+        validation.fragments.forEach(fragment => {
+          const row = document.createElement("div");
+          row.className = "word bad";
+          row.innerHTML = `<b>${fragment.text}</b><span>2-letter fragment</span>`;
+          els.wordList.appendChild(row);
+        });
+      }
+
+      const score = state.lastScore || scoreBoard(validation);
+      addBreakdown("Word points", score.wordPoints);
+      addBreakdown("Intersections", score.intersectionPoints);
+      addBreakdown("Rare letters", score.rarePoints);
+      addBreakdown("Upgrade bonuses", score.upgradePoints);
+      addBreakdown("Round total", score.total, true);
+    }
+
+    function addBreakdown(label, value, strong = false) {
+      const row = document.createElement("div");
+      row.className = "row";
+      row.innerHTML = `<span>${label}</span><${strong ? "strong" : "span"}>${value}</${strong ? "strong" : "span"}>`;
+      els.breakdown.appendChild(row);
+    }
+
+    function selectDie(index) {
+      if (state.locked || state.roll[index].used) return;
+      state.selectedDie = state.selectedDie === index ? null : index;
+      render();
+    }
+
+    function onCellClick(r, c) {
+      if (state.locked) return;
+      const current = state.board[r][c];
+      if (current) {
+        state.roll[current.rollIndex].used = false;
+        state.board[r][c] = null;
+        state.selectedDie = current.rollIndex;
+        validateAndMaybeComplete();
+        return;
+      }
+      if (state.selectedDie === null) {
+        setStatus("Select a die", "Pick a rolled die before placing on the board.", "ready");
+        return;
+      }
+      const die = state.roll[state.selectedDie];
+      if (die.face === "*" && !die.assigned) {
+        setStatus("Choose a wildcard letter", "Pick a letter from the gold wildcard tray first.", "ready");
+        return;
+      }
+      state.board[r][c] = { ...die, rollIndex: state.selectedDie };
+      die.used = true;
+      state.selectedDie = null;
+      validateAndMaybeComplete();
+    }
+
+    function validateAndMaybeComplete() {
+      const validation = validateBoard();
+      state.lastValidation = validation;
+      state.lastScore = scoreBoard(validation);
+      updateStatus(validation);
+      render();
+      if (validation.complete && !state.locked) {
+        completeRound();
+      }
+    }
+
+    function validateBoard() {
+      const placed = [];
+      for (let r = 0; r < BOARD_SIZE; r++) {
+        for (let c = 0; c < BOARD_SIZE; c++) {
+          if (state.board[r][c]) placed.push({ r, c });
+        }
+      }
+
+      const words = extractWords();
+      const fragments = words.filter(w => w.text.length === 2);
+      const realWords = words.filter(w => w.text.length >= 3).map(w => ({
+        ...w,
+        valid: WORDS.has(w.text)
+      }));
+      const invalidWords = realWords.filter(w => !w.valid);
+      const unused = state.roll.filter(d => !d.used).length;
+      const connected = placed.length > 0 && isConnected(placed);
+      const unassignedWild = placed.some(({ r, c }) => state.board[r][c].face === "*" && !state.board[r][c].assigned);
+      const invalidCells = [
+        ...fragments.flatMap(w => w.cells),
+        ...invalidWords.flatMap(w => w.cells)
+      ];
+
+      return {
+        placed,
+        words: realWords,
+        fragments,
+        invalidWords,
+        invalidCells,
+        unused,
+        connected,
+        unassignedWild,
+        complete: unused === 0 && connected && placed.length === state.roll.length && !unassignedWild && fragments.length === 0 && invalidWords.length === 0 && realWords.length > 0
+      };
+    }
+
+    function extractWords() {
+      const words = [];
+      for (let r = 0; r < BOARD_SIZE; r++) {
+        let current = [];
+        for (let c = 0; c <= BOARD_SIZE; c++) {
+          const cell = c < BOARD_SIZE ? state.board[r][c] : null;
+          if (cell) current.push({ r, c, letter: cell.assigned || "" });
+          if ((!cell || c === BOARD_SIZE) && current.length) {
+            if (current.length >= 2) {
+              words.push({
+                text: current.map(x => x.letter).join(""),
+                cells: current.map(({ r, c }) => ({ r, c })),
+                axis: "row"
+              });
+            }
+            current = [];
+          }
+        }
+      }
+      for (let c = 0; c < BOARD_SIZE; c++) {
+        let current = [];
+        for (let r = 0; r <= BOARD_SIZE; r++) {
+          const cell = r < BOARD_SIZE ? state.board[r][c] : null;
+          if (cell) current.push({ r, c, letter: cell.assigned || "" });
+          if ((!cell || r === BOARD_SIZE) && current.length) {
+            if (current.length >= 2) {
+              words.push({
+                text: current.map(x => x.letter).join(""),
+                cells: current.map(({ r, c }) => ({ r, c })),
+                axis: "col"
+              });
+            }
+            current = [];
+          }
+        }
+      }
+      return words;
+    }
+
+    function isConnected(placed) {
+      const placedSet = new Set(placed.map(posKey));
+      const seen = new Set();
+      const queue = [placed[0]];
+      seen.add(posKey(placed[0]));
+      while (queue.length) {
+        const pos = queue.shift();
+        neighbors(pos.r, pos.c).forEach(next => {
+          const key = posKey(next);
+          if (placedSet.has(key) && !seen.has(key)) {
+            seen.add(key);
+            queue.push(next);
+          }
+        });
+      }
+      return seen.size === placed.length;
+    }
+
+    function neighbors(r, c) {
+      return [
+        { r: r - 1, c }, { r: r + 1, c }, { r, c: c - 1 }, { r, c: c + 1 }
+      ].filter(p => p.r >= 0 && p.r < BOARD_SIZE && p.c >= 0 && p.c < BOARD_SIZE);
+    }
+
+    function findIntersections() {
+      const words = extractWords().filter(w => w.text.length >= 3);
+      const counts = new Map();
+      words.forEach(word => {
+        word.cells.forEach(cell => {
+          const key = posKey(cell);
+          counts.set(key, (counts.get(key) || 0) + 1);
+        });
+      });
+      return new Set([...counts.entries()].filter(([, count]) => count > 1).map(([key]) => key));
+    }
+
+    function scoreBoard(validation) {
+      if (!validation) {
+        return { wordPoints: 0, intersectionPoints: 0, rarePoints: 0, upgradePoints: 0, total: 0 };
+      }
+      const validWords = validation.words.filter(w => w.valid);
+      const wordPoints = validWords.reduce((sum, word) => sum + word.text.length * word.text.length, 0);
+      const intersections = findIntersections().size;
+      const intersectionPoints = intersections * (3 + state.upgrades.intersectionBonus);
+      let rareCount = 0;
+      let consonants = 0;
+      validation.placed.forEach(({ r, c }) => {
+        const letter = state.board[r][c].assigned;
+        if (RARE.has(letter)) rareCount++;
+        if (!"AEIOU".includes(letter)) consonants++;
+      });
+      const rarePoints = rareCount * (4 + state.upgrades.rareBonus);
+      const fiveBonus = validWords.filter(w => w.text.length === 5).length * state.upgrades.fiveBonus;
+      const consonantBonus = consonants * state.upgrades.consonantBonus;
+      const upgradePoints = fiveBonus + consonantBonus;
+      return {
+        wordPoints,
+        intersectionPoints,
+        rarePoints,
+        upgradePoints,
+        total: wordPoints + intersectionPoints + rarePoints + upgradePoints
+      };
+    }
+
+    function updateStatus(validation) {
+      if (state.locked) return;
+      if (validation.complete) {
+        setStatus("Valid board", "The crossword locks automatically. Choose an upgrade.", "good");
+        return;
+      }
+      if (validation.unused > 0) {
+        setStatus(`${validation.unused} dice left`, "Same dice, new faces. Use every rolled die.", "ready");
+        return;
+      }
+      if (!validation.connected) {
+        setStatus("Disconnected", "All placed dice must touch the same crossword.", "bad");
+        return;
+      }
+      if (validation.fragments.length) {
+        setStatus("Fragment found", "Two-letter runs are not words. Break or extend them.", "bad");
+        return;
+      }
+      if (validation.invalidWords.length) {
+        setStatus("Unknown word", `${validation.invalidWords[0].text} is not in this prototype dictionary.`, "bad");
+        return;
+      }
+      setStatus("Almost", "The structure is close. Keep shaping the board.", "ready");
+    }
+
+    function setStatus(title, body, tone) {
+      els.status.className = `status ${tone || ""}`;
+      els.status.innerHTML = `<strong>${title}</strong><span>${body}</span>`;
+    }
+
+    function completeRound() {
+      state.locked = true;
+      const gained = state.lastScore.total;
+      state.score += gained;
+      const passed = gained >= state.target;
+      els.upgradeSummary.textContent = passed
+        ? `Round score ${gained}. Pick one upgrade before round ${state.round + 1}.`
+        : `Round score ${gained}, below target ${state.target}. The run survives for now, but the target keeps climbing.`;
+      render();
+      setTimeout(() => showUpgrades(), 450);
+    }
+
+    function showUpgrades() {
+      els.upgradeGrid.innerHTML = "";
+      getUpgradeChoices().forEach(upgrade => {
+        const btn = document.createElement("button");
+        btn.className = "upgrade";
+        btn.type = "button";
+        btn.innerHTML = `<span>${upgrade.family}</span><strong>${upgrade.name}</strong><em>${upgrade.desc}</em>`;
+        btn.addEventListener("click", () => {
+          upgrade.apply();
+          state.round += 1;
+          state.target += 6 + Math.floor(state.round * 2.2);
+          startRound();
+        });
+        els.upgradeGrid.appendChild(btn);
+      });
+      els.modal.classList.add("show");
+    }
+
+    function getUpgradeChoices() {
+      const wildTarget = randomDie();
+      const vowelTarget = randomDie();
+      const rolledTarget = randomFrom(state.roll);
+      const duplicateTarget = state.dice.find(d => d.id === rolledTarget.dieId);
+      const candidates = [
+        {
+          family: "Dice Mutation",
+          name: `Wildcard Side: D${wildTarget.id}`,
+          desc: `D${wildTarget.id} can now roll a wildcard face.`,
+          apply: () => {
+            wildTarget.wild = true;
+            if (!wildTarget.faces.includes("*")) wildTarget.faces.push("*");
+            wildTarget.upgrades.push("wild");
+          }
+        },
+        {
+          family: "Dice Mutation",
+          name: `Extra Vowel: D${vowelTarget.id}`,
+          desc: `Add a useful vowel face to D${vowelTarget.id}.`,
+          apply: () => {
+            vowelTarget.faces.push(randomFrom(["A", "E", "I", "O"]));
+            vowelTarget.upgrades.push("vowel");
+          }
+        },
+        {
+          family: "Dice Mutation",
+          name: `Duplicate ${rolledTarget.assigned || rolledTarget.letter}: D${duplicateTarget.id}`,
+          desc: `Add another ${rolledTarget.assigned || rolledTarget.letter} face to D${duplicateTarget.id}.`,
+          apply: () => {
+            duplicateTarget.faces.push(rolledTarget.assigned || rolledTarget.letter);
+            duplicateTarget.upgrades.push("copy");
+          }
+        },
+        {
+          family: "Utility",
+          name: "Add Die",
+          desc: "Add one persistent die. Future rounds require one more letter.",
+          apply: () => {
+            const faces = ADD_DIE_FACES[(state.nextDieId - baseDice.length - 1) % ADD_DIE_FACES.length];
+            state.dice.push({
+              id: state.nextDieId,
+              faces: [...faces],
+              wild: false,
+              upgrades: ["new"]
+            });
+            state.nextDieId += 1;
+          }
+        },
+        {
+          family: "Utility",
+          name: "Extra Reroll",
+          desc: "Gain one more reroll every round.",
+          apply: () => { state.rerollsBase += 1; }
+        },
+        {
+          family: "Scoring Bias",
+          name: "Intersection Bonus",
+          desc: "Crossing letters score 2 extra points.",
+          apply: () => { state.upgrades.intersectionBonus += 2; }
+        },
+        {
+          family: "Scoring Bias",
+          name: "Five-Letter Prize",
+          desc: "Each 5-letter word scores 6 extra points.",
+          apply: () => { state.upgrades.fiveBonus += 6; }
+        },
+        {
+          family: "Scoring Bias",
+          name: "Rare Letter Drama",
+          desc: "Rare letters score 3 extra points.",
+          apply: () => { state.upgrades.rareBonus += 3; }
+        },
+        {
+          family: "Scoring Bias",
+          name: "Consonant Lean",
+          desc: "Every consonant scores 1 extra point.",
+          apply: () => { state.upgrades.consonantBonus += 1; }
+        }
+      ];
+      return shuffle(candidates).slice(0, 3);
+    }
+
+    function randomDie() {
+      return state.dice[Math.floor(Math.random() * state.dice.length)];
+    }
+
+    function randomFrom(items) {
+      return items[Math.floor(Math.random() * items.length)];
+    }
+
+    function shuffle(items) {
+      return [...items].sort(() => Math.random() - 0.5);
+    }
+
+    function posKey(pos) {
+      return `${pos.r},${pos.c}`;
+    }
+
+    function reroll() {
+      if (state.rerolls <= 0 || state.locked) return;
+      state.rerolls -= 1;
+      state.board = emptyBoard();
+      state.selectedDie = null;
+      state.roll = rollDice();
+      validateAndMaybeComplete();
+    }
+
+    function clearBoard() {
+      if (state.locked) return;
+      state.board = emptyBoard();
+      state.roll.forEach(d => { d.used = false; });
+      state.selectedDie = null;
+      validateAndMaybeComplete();
+    }
+
+    function seedSolve() {
+      if (state.locked) return;
+      clearBoard();
+      const map = SOLVE_MAPS[(state.round - 1) % SOLVE_MAPS.length];
+      map.slice(0, state.roll.length).forEach((slot, index) => {
+        const die = state.roll[index];
+        die.face = slot.l;
+        die.letter = slot.l;
+        die.assigned = slot.l;
+        state.board[slot.r][slot.c] = { ...die, rollIndex: index };
+        die.used = true;
+      });
+      validateAndMaybeComplete();
+    }
+
+    els.reroll.addEventListener("click", reroll);
+    els.clear.addEventListener("click", clearBoard);
+    els.newRun.addEventListener("click", newRun);
+    els.hint.addEventListener("click", seedSolve);
+
+    newRun();
+  </script>
+</body>
+</html>
