@@ -44,6 +44,30 @@
   canvas.dragging { cursor: grabbing; }
   canvas.placing { cursor: copy; }
 
+  .cam-btns {
+    position: fixed;
+    bottom: 18px;
+    right: calc(min(340px, 100vw - 36px) + 36px);
+    z-index: 20;
+    display: flex;
+    gap: 6px;
+  }
+  .cam-btn {
+    height: 34px;
+    padding: 0 12px;
+    border: 1px solid var(--line-strong);
+    border-radius: 8px;
+    background: rgba(6, 8, 7, 0.72);
+    color: var(--muted);
+    cursor: pointer;
+    font: 780 11px/1 var(--mono);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    backdrop-filter: blur(6px);
+  }
+  .cam-btn:hover { background: rgba(244, 242, 234, 0.12); color: var(--ink); }
+  .cam-btn.active { border-color: rgba(228, 184, 78, 0.46); color: #f4d47a; background: rgba(228, 184, 78, 0.12); }
+
   .topbar {
     position: fixed;
     top: 18px;
@@ -172,13 +196,12 @@
 
   .dice {
     position: relative;
-    height: clamp(214px, 28vw, 262px);
+    height: clamp(214px, 26vw, 246px);
     margin-top: 12px;
     border: 1px solid rgba(244, 242, 234, 0.15);
     border-radius: 8px;
     background:
-      radial-gradient(circle at 50% 35%, rgba(244, 242, 234, 0.06), transparent 58%),
-      linear-gradient(180deg, rgba(244, 242, 234, 0.045), rgba(0, 0, 0, 0.12)),
+      linear-gradient(180deg, rgba(244, 242, 234, 0.055), rgba(0, 0, 0, 0.14)),
       rgba(6, 8, 7, 0.46);
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.06),
@@ -189,43 +212,51 @@
 
   .die {
     position: absolute;
-    display: block;
-    border: 1px solid transparent;
-    border-radius: 10px;
-    background: transparent;
+    display: grid;
+    grid-template-rows: 24px 1fr 24px;
+    border: 1px solid rgba(22, 25, 20, 0.2);
+    border-radius: 8px;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(225, 218, 198, 0.96)),
+      var(--tile);
     color: var(--tile-ink);
     cursor: grab;
     isolation: isolate;
-    padding: 0;
+    padding: 6px 8px;
     font-weight: 850;
     line-height: 1;
-    box-shadow: none;
-    transition: opacity 0.12s, transform 0.08s, border-color 0.12s, background 0.12s;
+    box-shadow: 0 12px 20px rgba(0, 0, 0, 0.22), inset 0 -5px 0 rgba(0, 0, 0, 0.08);
+    transition: opacity 0.18s, transform 0.18s, border-color 0.12s, background 0.12s;
     touch-action: none;
   }
 
   .die:hover {
-    border-color: rgba(228, 184, 78, 0.28);
-    background: rgba(228, 184, 78, 0.06);
-    transform: translateY(-1px);
+    border-color: rgba(228, 184, 78, 0.72);
+    transform: translateY(-2px);
   }
 
   .die.dragging {
     opacity: 0.58;
     cursor: grabbing;
     border-color: rgba(228, 184, 78, 0.48);
-    background: rgba(228, 184, 78, 0.09);
   }
 
   .die.used {
-    opacity: 0.34;
+    opacity: 0.38;
     cursor: default;
     transform: none;
+    filter: grayscale(0.35);
+  }
+
+  .die.stuck {
+    border-color: rgba(228, 140, 50, 0.7);
+    box-shadow: 0 0 0 2px rgba(228, 140, 50, 0.18), 0 12px 20px rgba(0, 0, 0, 0.22);
   }
 
   .die.wild {
     color: #735500;
     border-color: rgba(228, 184, 78, 0.8);
+    background: linear-gradient(180deg, #ffefab, #efd070);
   }
 
   .die.has-wild {
@@ -245,65 +276,75 @@
   }
 
   .die-id {
-    position: absolute;
-    top: 5px;
-    left: 6px;
+    position: relative;
+    justify-self: start;
+    align-self: start;
     min-height: 15px;
     border-radius: 999px;
-    background: rgba(244, 242, 234, 0.72);
+    background: rgba(23, 26, 22, 0.13);
     color: rgba(23, 26, 22, 0.68);
-    padding: 3px 6px 0;
-    font: 900 8px/1 var(--mono);
+    padding: 4px 7px 0;
+    font: 900 9px/1 var(--mono);
     letter-spacing: 0.05em;
     z-index: 2;
   }
 
   .die-current {
-    position: absolute;
-    top: 5px;
-    right: 6px;
+    position: relative;
     display: grid;
     place-items: center;
-    min-width: 20px;
-    height: 20px;
-    border-radius: 999px;
-    background: rgba(244, 242, 234, 0.92);
+    min-width: 0;
+    height: auto;
+    border-radius: 0;
+    background: transparent;
     color: var(--tile-ink);
-    font: 950 13px/1 var(--sans);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.75);
+    font: 950 46px/0.92 var(--sans);
+    box-shadow: none;
     z-index: 2;
   }
 
   .die.wild .die-current {
-    background: #f1cc62;
     color: #5d4200;
   }
 
   .die-faces {
-    position: absolute;
-    left: 8px;
-    right: 8px;
-    bottom: 5px;
+    position: relative;
+    align-self: end;
     width: auto;
     overflow: hidden;
     text-align: center;
-    color: rgba(244, 242, 234, 0.62);
-    font: 850 7px/1.15 var(--mono);
+    color: rgba(22, 25, 20, 0.58);
+    font: 850 9px/1.15 var(--mono);
     text-overflow: ellipsis;
     white-space: nowrap;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.08em;
     z-index: 2;
   }
 
-  .tray-scene-image {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
+  .dice.rolling .die {
+    opacity: 0;
+    transform: translate(var(--fly-x, 0), var(--fly-y, 18px)) scale(0.62) rotate(var(--fly-r, 0deg));
     pointer-events: none;
-    display: block;
-    z-index: 0;
+  }
+
+  .dice.settling .die {
+    animation: flyToTray 0.58s cubic-bezier(0.18, 0.88, 0.28, 1) backwards;
+    animation-delay: var(--settle-delay, 0ms);
+  }
+
+  @keyframes flyToTray {
+    from {
+      opacity: 0.08;
+      transform: translate(var(--fly-x, 0), var(--fly-y, 18px)) scale(0.62) rotate(var(--fly-r, 0deg));
+    }
+    62% {
+      opacity: 1;
+      transform: translate(0, -7px) scale(1.04) rotate(0deg);
+    }
+    to {
+      opacity: 1;
+      transform: translate(0, 0) scale(1) rotate(0deg);
+    }
   }
 
   .controls {
@@ -501,6 +542,7 @@
     .brand { padding: 12px; }
     .tray { padding: 12px; }
     .dice { height: 210px; }
+    .die-current { font-size: 36px; }
     .die-faces { font-size: 8px; }
   }
 </style>
@@ -520,6 +562,11 @@
     </section>
   </header>
 
+  <div class="cam-btns">
+    <button class="cam-btn" id="resetCamBtn">Reset</button>
+    <button class="cam-btn active" id="perspBtn">ISO</button>
+  </div>
+
   <aside class="panel tray">
     <h2>Dice</h2>
     <div id="status" class="status ready">
@@ -532,7 +579,6 @@
       <button class="btn primary" id="rerollBtn">Reroll 1</button>
       <button class="btn" id="clearBtn">Clear</button>
       <button class="btn" id="newRunBtn">New Run</button>
-      <button class="btn" id="hintBtn">Seed Solve</button>
     </div>
     <p class="hint">Drag from tray to board. Drag placed dice to move them or drop off-board to return.</p>
   </aside>
@@ -553,6 +599,7 @@
     </div>
   </div>
 
+  <script src="enable-words.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script>
   const BOARD_SIZE = 5;
@@ -562,62 +609,15 @@
   const RARE = new Set(["J", "Q", "X", "Z", "K", "V", "W", "Y"]);
   const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
-  const WORDS = new Set(`
-    ACE ACED ACES ACHE ACID ACORN ACT ACTS ADD AGE AGES AIR AIRE ALERT ALONE ALSO ALTER AMBER ANCHOR AND ANEW
-    ANT ANTE APE APEX ARC AREA ARENA ARM ARMS ART ARTS ASH ASHEN ATOM AURA AVID AXE AXES
-    BAD BAKE BAKER BARK BARN BASE BASED BASIC BAST BAT BATH BEAD BEAM BEAN BEAR BEARD BEAST BEAT BEATS BEND BENT
-    BIRD BITE BLACK BLADE BLEND BOLD BONE BONES BORN BREAD BREAK BRICK BRIDGE BRINE BRING BROAD BROKE BROWN BURN
-    CAB CABLE CAGE CAKE CALM CAMP CAN CANE CARED CARGO CART CASE CAST CAVE CEDAR CHAIN CHAIR CHALK CHARM CHART
-    CHASE CHEST CHIME CLAY CLEAN CLEAR CLERK CLIMB CLOCK CLONE CLOSE CLOUD COAST CODE COLD CONE CORD CORE CORN
-    CRANE CRATE CREAM CROWN CURE CURVE
-    DARE DARK DART DATE DAWN DEAL DEAR DECK DEER DICE DINE DIRT DIVE DOCK DOME DONE DOOR DOVE DRAG DRAIN DRAW
-    DREAM DUNE DUSK
-    EAGER EARN EARTH EAST EAT ECHO EDGE EEL ELM EMBER END ENTER EON EROS EVER EVIL EXACT EXIT
-    FACE FACT FADE FAIR FARM FAST FATE FERN FIELD FILE FINE FIRE FIRM FISH FIVE FLAME FLARE FLEET FLOOD FLOOR
-    FLOW FLOWER FOCUS FOLD FORCE FORGE FORM FRAME FRESH FROST
-    GAME GATE GEAR GHOST GLADE GLASS GLOW GOAL GOLD GONE GRAIN GRAPE GRAPH GRASS GRAVE GREAT GREEN GRID GRIN GROVE
-    HAIL HAIR HAND HARBOR HARD HARE HARM HARP HASTE HAT HATE HAZE HEAL HEAR HEART HEAT HELM HERB HILL HIVE HOME
-    HONEY HOPE HORN HORSE HOST HOUSE
-    ICE ICED ICON IDEA IDLE IMAGE INDEX INK IRON ISLE IVY
-    JADE JAR JAZZ JEST JOIN JOLT JUMP JUNE JUNK
-    KEEN KEEP KITE KNEAD KNEE KNIFE KNOT
-    LACE LAKE LANE LARK LAST LATE LEAF LEAN LEARN LEMON LEND LENS LEXICON LIME LINE LION LIST LONE LONG LOOM
-    LOOP LORD LORE LOSE LOST LOVE
-    MAGE MAIL MAIN MAKE MARCH MARK MARS MATE MAZE MEAL MEAN MEND MENTOR MILE MIND MINE MINT MIST MODE MOON MORE
-    MORN MOUSE MOVE MUSE
-    NAME NEAR NEAT NEST NEWT NIGHT NODE NOISE NORTH NOTE NOVA
-    OAK OAR OASIS OCEAN ODOR OLIVE ONCE OPAL OPEN ORBIT ORDER ORE ORGAN OTHER OVEN
-    PACE PAGE PAIR PALE PANEL PARK PART PASTE PATH PEAK PEAR PINE PLAIN PLANE PLANT PLATE PLAY PLOT POEM POINT
-    POND PORT POST PRIDE PRIME PRINT PROOF
-    QUART QUEEN QUEST QUICK QUIET QUILL
-    RACE RAIN RAISE RAKE RANK RARE RATE RAVEN REACH READ READY REAL REALM REED REND REST RICE RICH RING RIPE
-    RISE ROAD ROAM ROAST ROBE ROCK RODE ROLL ROOT ROSE ROUND ROUTE
-    SAGE SAIL SALT SAME SAND SAVE SCAR SCALE SCORE SEAL SEAM SEAT SEED SEEK SEEN SENSE SHADE SHALE SHAPE SHARE
-    SHARP SHEAR SHEET SHELF SHINE SHORE SHORT SILK SINK SITE SLATE SLEEP SLICE SLOPE SMILE SMOKE SNAKE SOLAR SOLVE
-    SONG SORT SOUND SPACE SPARE SPARK SPEAR SPICE SPIRE SPORE STACK STAGE STAIR STAKE STALE STAND STARE STARK START
-    STEAM STEEL STEER STEM STEP STONE STORE STORM STORY STRAP STREAM STREET STRING STRONG SUN SWAN SWEAR SWEET
-    TACK TAIL TAKE TALE TALK TAME TANK TAPE TASK TEAM TEAR TEND TENT TERM TEST TEXT THAN THORN THREAD THREE TIDE
-    TILE TIME TONE TOOL TRACE TRACK TRADE TRAIL TRAIN TREAD TREE TRIAL TRIBE TRICK TRUE TUNE TURN
-    VALE VASE VAST VEIL VEIN VINE VITAL VOID VOTE
-    WADE WAGE WAKE WALL WAND WARM WAVE WEAR WEST WHEEL WIDE WILD WIND WINE WING WIRE WISE WOLF WORD WORLD WORTH
-    YARD YARN YEAR YIELD YOUNG
-    ZEAL ZERO ZONE
-  `.trim().split(/\s+/));
+  const WORDS = new Set(window.LEXICON_WORDS || []);
+  const WORDS_BY_LETTER = {};
+  for (const word of WORDS) {
+    for (const ch of word) {
+      if (!WORDS_BY_LETTER[ch]) WORDS_BY_LETTER[ch] = [];
+      WORDS_BY_LETTER[ch].push(word);
+    }
+  }
 
-  const SOLVE_MAPS = [
-    [
-      { r: 1, c: 0, l: "S" }, { r: 1, c: 1, l: "T" }, { r: 1, c: 2, l: "O" }, { r: 1, c: 3, l: "N" }, { r: 1, c: 4, l: "E" },
-      { r: 2, c: 0, l: "A" }, { r: 3, c: 0, l: "L" }, { r: 4, c: 0, l: "T" }
-    ],
-    [
-      { r: 1, c: 0, l: "C" }, { r: 1, c: 1, l: "R" }, { r: 1, c: 2, l: "A" }, { r: 1, c: 3, l: "N" }, { r: 1, c: 4, l: "E" },
-      { r: 0, c: 2, l: "A" }, { r: 2, c: 2, l: "R" }, { r: 3, c: 2, l: "T" }
-    ],
-    [
-      { r: 1, c: 0, l: "P" }, { r: 1, c: 1, l: "L" }, { r: 1, c: 2, l: "A" }, { r: 1, c: 3, l: "N" }, { r: 1, c: 4, l: "T" },
-      { r: 0, c: 2, l: "E" }, { r: 2, c: 2, l: "A" }, { r: 3, c: 2, l: "R" }
-    ]
-  ];
 
   const STARTING_DICE_FACES = [
     ["S", "A", "R", "T", "E", "N"],
@@ -650,11 +650,13 @@
     reroll: document.getElementById("rerollBtn"),
     clear: document.getElementById("clearBtn"),
     newRun: document.getElementById("newRunBtn"),
-    hint: document.getElementById("hintBtn"),
+
     ghost: document.getElementById("dragGhost"),
     modal: document.getElementById("upgradeModal"),
     upgradeGrid: document.getElementById("upgradeGrid"),
-    upgradeSummary: document.getElementById("upgradeSummary")
+    upgradeSummary: document.getElementById("upgradeSummary"),
+    perspBtn: document.getElementById("perspBtn"),
+    resetCamBtn: document.getElementById("resetCamBtn")
   };
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -670,17 +672,22 @@
 
   let viewSize = 5.8;
   let azimuth = Math.PI * 0.25;
-  let polar = Math.PI * 0.34;
+  let polar = 0.52;
   const target = new THREE.Vector3(0, 0, 0);
   const aspect0 = window.innerWidth / window.innerHeight;
   const camera = new THREE.OrthographicCamera(-viewSize * aspect0, viewSize * aspect0, viewSize, -viewSize, 0.1, 200);
+  const perspCamera = new THREE.PerspectiveCamera(48, aspect0, 0.1, 200);
+  let usePerspective = false;
 
   function updateCamera() {
     const r = 12;
-    camera.position.x = target.x + r * Math.sin(polar) * Math.cos(azimuth);
-    camera.position.y = target.y + r * Math.cos(polar);
-    camera.position.z = target.z + r * Math.sin(polar) * Math.sin(azimuth);
+    const cx = target.x + r * Math.sin(polar) * Math.cos(azimuth);
+    const cy = target.y + r * Math.cos(polar);
+    const cz = target.z + r * Math.sin(polar) * Math.sin(azimuth);
+    camera.position.set(cx, cy, cz);
     camera.lookAt(target);
+    perspCamera.position.set(cx, cy, cz);
+    perspCamera.lookAt(target);
   }
 
   scene.add(new THREE.HemisphereLight(0xffffff, 0x5a4f3d, 0.38));
@@ -770,7 +777,8 @@
   const boardGroup = new THREE.Group();
   const tileGroup = new THREE.Group();
   const pieceGroup = new THREE.Group();
-  boardGroup.add(tileGroup, pieceGroup);
+  const rollStageGroup = new THREE.Group();
+  boardGroup.add(tileGroup, pieceGroup, rollStageGroup);
   scene.add(boardGroup);
 
   function tilePos(c, r) {
@@ -807,10 +815,18 @@
   scene.add(hoverMesh);
 
   const dropAnims = [];
-  const easeOutBack = t => {
-    const c1 = 1.70158, c3 = c1 + 1;
+  const easeOutBack = (t, c1 = 1.70158) => {
+    const c3 = c1 + 1;
     return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
   };
+
+  // Pre-allocated scratch objects for tickRollStage — avoids per-frame GC pressure
+  const _qA = new THREE.Quaternion();
+  const _qB = new THREE.Quaternion();
+  const _qC = new THREE.Quaternion();
+  const _v3 = new THREE.Vector3();
+  const _vW = new THREE.Vector3();
+  const _vY = new THREE.Vector3(0, 1, 0);
 
   function animateDrop(obj, distance = 1.4, dur = 0.42) {
     const baseY = obj.position.y;
@@ -837,7 +853,7 @@
   function pickTile(clientX, clientY) {
     ndc.x = (clientX / window.innerWidth) * 2 - 1;
     ndc.y = -(clientY / window.innerHeight) * 2 + 1;
-    raycaster.setFromCamera(ndc, camera);
+    raycaster.setFromCamera(ndc, usePerspective ? perspCamera : camera);
     const hits = raycaster.intersectObjects(tileGroup.children, true);
     for (const hit of hits) {
       let n = hit.object;
@@ -850,7 +866,7 @@
   function pickPlacedPiece(clientX, clientY) {
     ndc.x = (clientX / window.innerWidth) * 2 - 1;
     ndc.y = -(clientY / window.innerHeight) * 2 + 1;
-    raycaster.setFromCamera(ndc, camera);
+    raycaster.setFromCamera(ndc, usePerspective ? perspCamera : camera);
     const hits = raycaster.intersectObjects(pieceGroup.children, true);
     for (const hit of hits) {
       let n = hit.object;
@@ -956,19 +972,19 @@
     });
   }
 
-  function makeLetterDie(cell) {
+  function makeLetterDie(cell, uniformFaces = false) {
     const isWild = cell.face === "*";
     const visible = visualDieFaces(cell);
     const group = new THREE.Group();
     const die = new THREE.Mesh(
       new THREE.BoxGeometry(0.82, 0.82, 0.82),
       [
-        makeDieFaceMaterial(visible.right, isWild, "side"),
-        makeDieFaceMaterial(visible.left, isWild, "side"),
+        makeDieFaceMaterial(visible.right, isWild, uniformFaces ? "top" : "side"),
+        makeDieFaceMaterial(visible.left, isWild, uniformFaces ? "top" : "side"),
         makeDieFaceMaterial(visible.top, isWild, "top"),
         makeDieFaceMaterial("", isWild, "bottom"),
-        makeDieFaceMaterial(visible.front, isWild, "side"),
-        makeDieFaceMaterial(visible.back, isWild, "side")
+        makeDieFaceMaterial(visible.front, isWild, uniformFaces ? "top" : "side"),
+        makeDieFaceMaterial(visible.back, isWild, uniformFaces ? "top" : "side")
       ]
     );
     die.position.y = 0.41;
@@ -991,10 +1007,9 @@
   let didOrbitDrag = false;
   let lastPointer = null;
   let currentHover = null;
-  let trayRollSignature = "";
-  let trayRollUntil = 0;
-  let trayRollFrame = 0;
+  let rollAnimationSerial = 0;
   const DRAG_THRESHOLD = 5;
+  const ROLL_ANIMATION_MS = 2000;
 
   function cloneDice() {
     return baseDice.map(die => ({ id: die.id, faces: [...die.faces], wild: die.wild, upgrades: [...die.upgrades] }));
@@ -1016,6 +1031,10 @@
       roll: [],
       board: emptyBoard(),
       locked: false,
+      isRolling: false,
+      rollAnimationId: 0,
+      rollStartedAt: 0,
+      traySettlingUntil: 0,
       selectedWildIndex: null,
       upgrades: {
         intersectionBonus: 0,
@@ -1024,7 +1043,8 @@
         consonantBonus: 0
       },
       lastValidation: null,
-      lastScore: null
+      lastScore: null,
+      stuckDice: []
     };
     startRound();
   }
@@ -1032,12 +1052,14 @@
   function startRound() {
     state.board = emptyBoard();
     state.locked = false;
+    state.isRolling = false;
     state.selectedWildIndex = null;
     state.rerolls = state.rerollsBase;
     state.roll = rollDice();
+    state.lastValidation = null;
+    state.lastScore = null;
     els.modal.classList.remove("show");
-    renderAll();
-    validateAndMaybeComplete();
+    beginRollAnimation();
   }
 
   function rollDice() {
@@ -1060,41 +1082,44 @@
     els.score.textContent = state.score;
     els.target.textContent = state.target;
     els.reroll.textContent = `Reroll ${state.rerolls}`;
-    els.reroll.disabled = state.rerolls <= 0 || state.locked;
+    els.reroll.disabled = state.isRolling || state.rerolls <= 0 || state.locked;
+    els.clear.disabled = state.isRolling || state.locked;
+    els.newRun.disabled = state.isRolling;
     renderDiceTray();
     renderWildcardPicker();
     if (pieces) renderPieces();
     renderValidation();
+    if (state.isRolling) setStatus("Rolling dice", "Your letters are landing in the tray.", "ready");
   }
 
   function renderDiceTray() {
     els.tray.innerHTML = "";
-    const sceneImage = document.createElement("img");
-    sceneImage.className = "tray-scene-image";
-    sceneImage.alt = "";
-    sceneImage.draggable = false;
-    els.tray.appendChild(sceneImage);
-    const rollSignature = state.roll.map(die => die.id).join("|");
-    const now = Date.now();
-    if (rollSignature && rollSignature !== trayRollSignature) {
-      trayRollSignature = rollSignature;
-      trayRollUntil = now + 620;
-      trayRollFrame += 1;
-    }
+    const traySettling = Date.now() < (state.traySettlingUntil || 0);
+    els.tray.classList.toggle("rolling", Boolean(state.isRolling));
+    els.tray.classList.toggle("settling", traySettling);
+    const trayRect = els.tray.getBoundingClientRect();
     state.roll.forEach((die, index) => {
       const source = state.dice.find(d => d.id === die.dieId);
       const faceText = source ? source.faces.join(" ") : "";
       const isMutated = source && (source.upgrades.length > 0 || source.faces.length > 6);
       const layout = trayDieLayout(index, state.roll.length);
+      const cardCenterX = trayRect.left + trayRect.width * ((layout.left + layout.width / 2) / 100);
+      const cardCenterY = trayRect.top + trayRect.height * ((layout.top + layout.height / 2) / 100);
+      const flySource = rollFlySource(index, state.roll.length);
       const btn = document.createElement("button");
-      btn.className = `die${die.face === "*" ? " wild" : ""}${source?.wild ? " has-wild" : ""}${isMutated ? " mutated" : ""}${die.used ? " used" : ""}${drag?.rollIndex === index ? " dragging" : ""}`;
+      btn.className = `die${die.face === "*" ? " wild" : ""}${source?.wild ? " has-wild" : ""}${isMutated ? " mutated" : ""}${die.used ? " used" : ""}${drag?.rollIndex === index ? " dragging" : ""}${state.stuckDice?.includes(index) ? " stuck" : ""}`;
       btn.type = "button";
-      btn.disabled = die.used || state.locked;
+      btn.disabled = state.isRolling || die.used || state.locked;
       btn.title = `D${die.dieId}: ${faceText}`;
       btn.style.left = `${layout.left}%`;
       btn.style.top = `${layout.top}%`;
       btn.style.width = `${layout.width}%`;
       btn.style.height = `${layout.height}%`;
+      btn.style.transitionDelay = state.isRolling ? "0ms" : `${80 + index * 28}ms`;
+      btn.style.setProperty("--fly-x", `${flySource.x - cardCenterX}px`);
+      btn.style.setProperty("--fly-y", `${flySource.y - cardCenterY}px`);
+      btn.style.setProperty("--fly-r", `${[-14, 11, -8, 15, 9, -12, 13, -10][index % 8]}deg`);
+      btn.style.setProperty("--settle-delay", `${index * 38}ms`);
       btn.innerHTML = `
         <span class="die-id">D${die.dieId}</span>
         <span class="die-current">${die.face === "*" ? (die.assigned || "*") : die.letter}</span>
@@ -1109,11 +1134,6 @@
       });
       els.tray.appendChild(btn);
     });
-    if (now < trayRollUntil) {
-      animateDiceTrayRoll(sceneImage, rollSignature, trayRollFrame);
-    } else {
-      renderDiceTrayScene(sceneImage);
-    }
   }
 
   function trayDieLayout(index, count) {
@@ -1123,18 +1143,28 @@
     const width = Math.min(22, 82 / cols);
     const height = count > 4 ? 40 : 62;
     const gap = (100 - width * cols) / (cols + 1);
-    const xJitter = [-1.4, 1.1, -0.7, 1.5, -1.1, 0.9, -1.3, 1.0][index % 8];
-    const yJitter = [1.2, -0.8, 0.6, -1.1, -0.7, 1.0, -1.0, 0.8][index % 8];
+    const rowTop = count > 4 ? [7, 53] : [19];
+    const top = rowTop[row];
     return {
-      left: gap + col * (width + gap) + xJitter,
-      top: (row ? 53 : 10) + yJitter,
+      left: gap + col * (width + gap),
+      top,
       width,
       height,
-      sceneX: -2.58 + col * (5.16 / Math.max(cols - 1, 1)) + xJitter * 0.028,
-      sceneZ: row ? 0.98 + yJitter * 0.02 : -0.88 + yJitter * 0.02,
+      sceneX: -2.58 + col * (5.16 / Math.max(cols - 1, 1)),
+      sceneZ: row ? 0.98 : -0.88,
       rotationY: [-0.22, 0.14, -0.08, 0.2, 0.1, -0.18, 0.16, -0.12][index % 8],
-      rotationZ: [-0.08, 0.05, 0.04, -0.06, 0.06, -0.04, 0.08, -0.05][index % 8]
+      rotationZ: 0
     };
+  }
+
+  function rollFlySource(index, count) {
+    const cols = Math.ceil(count / 2);
+    const row = index >= cols ? 1 : 0;
+    const col = row ? index - cols : index;
+    const span = Math.min(340, Math.max(110, (cols - 1) * 74));
+    const x = window.innerWidth * 0.5 + (cols === 1 ? 0 : -span / 2 + col * (span / (cols - 1)));
+    const y = window.innerHeight * 0.47 + (row ? 54 : -54);
+    return { x, y };
   }
 
   function makeTrayDieCell(die, source) {
@@ -1145,110 +1175,194 @@
     };
   }
 
-  function animateDiceTrayRoll(image, signature, frameId) {
-    const start = Date.now();
-    const duration = Math.max(180, trayRollUntil - start);
-    let lastRendered = 0;
-    renderDiceTrayScene(image, { rollT: 0 });
-    const tick = () => {
-      if (frameId !== trayRollFrame || signature !== trayRollSignature || !image.isConnected) return;
-      const now = Date.now();
-      const t = Math.min((now - start) / duration, 1);
-      if (now - lastRendered > 55 || t >= 1) {
-        renderDiceTrayScene(image, { rollT: t });
-        lastRendered = now;
-      }
-      if (t < 1) {
-        setTimeout(tick, 32);
-      } else {
-        renderDiceTrayScene(image);
-      }
-    };
-    setTimeout(tick, 32);
+  function beginRollAnimation() {
+    state.stuckDice = [];
+    state.isRolling = true;
+    state.traySettlingUntil = 0;
+    state.rollAnimationId = ++rollAnimationSerial;
+    state.rollStartedAt = performance.now();
+    buildRollStage();
+    renderAll();
+    window.setTimeout(() => finishRollAnimation(state.rollAnimationId), ROLL_ANIMATION_MS);
   }
 
-  function renderDiceTrayScene(image, options = {}) {
-    const rollT = options.rollT ?? 1;
-    const rolling = rollT < 1;
-    const settle = 1 - Math.pow(1 - rollT, 2);
-    const rect = els.tray.getBoundingClientRect();
-    const width = Math.max(360, Math.floor(rect.width || 480));
-    const height = Math.max(200, Math.floor(rect.height || 240));
-    const trayRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
-    trayRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    trayRenderer.setSize(width, height, false);
-    trayRenderer.outputEncoding = THREE.sRGBEncoding;
+  function finishRollAnimation(animationId) {
+    if (!state.isRolling || animationId !== state.rollAnimationId) return;
+    state.isRolling = false;
+    state.traySettlingUntil = Date.now() + 820;
+    clearRollStage();
+    validateAndMaybeComplete();
+    window.setTimeout(() => {
+      if (animationId === state.rollAnimationId) renderDiceTray();
+    }, 860);
+  }
 
-    const trayScene = new THREE.Scene();
-    trayScene.add(new THREE.HemisphereLight(0xffffff, 0x2b261d, 0.76));
-    const key = new THREE.DirectionalLight(0xffffff, 1.24);
-    key.position.set(3.2, 5.5, 4.2);
-    trayScene.add(key);
-    const fill = new THREE.DirectionalLight(0xd8f5cf, 0.42);
-    fill.position.set(-3, 2, -2);
-    trayScene.add(fill);
+  function clearRollStage() {
+    while (rollStageGroup.children.length) {
+      const child = rollStageGroup.children.pop();
+      disposeObject(child);
+    }
+  }
 
-    const floor = new THREE.Mesh(
-      new THREE.BoxGeometry(7.25, 0.16, 3.55),
-      new THREE.MeshLambertMaterial({ color: 0x111511 })
-    );
-    floor.position.y = -0.08;
-    trayScene.add(floor);
-
-    const lipMaterial = new THREE.MeshLambertMaterial({ color: 0x202720 });
-    [
-      { size: [7.45, 0.32, 0.16], pos: [0, 0.05, -1.88] },
-      { size: [7.45, 0.32, 0.16], pos: [0, 0.05, 1.88] },
-      { size: [0.16, 0.32, 3.7], pos: [-3.72, 0.05, 0] },
-      { size: [0.16, 0.32, 3.7], pos: [3.72, 0.05, 0] }
-    ].forEach(({ size, pos }) => {
-      const lip = new THREE.Mesh(new THREE.BoxGeometry(...size), lipMaterial);
-      lip.position.set(...pos);
-      trayScene.add(lip);
-    });
-
+  function buildRollStage() {
+    clearRollStage();
     state.roll.forEach((die, index) => {
       const source = state.dice.find(d => d.id === die.dieId);
-      const layout = trayDieLayout(index, state.roll.length);
-      const piece = makeLetterDie(makeTrayDieCell(die, source));
-      piece.scale.setScalar(0.86);
-      const spinSeed = (index + 1) * 0.73;
-      const rollX = Math.sin((rollT * 4.1 + spinSeed) * Math.PI) * (1 - settle) * 0.42;
-      const rollY = Math.cos((rollT * 4.6 + spinSeed) * Math.PI) * (1 - settle) * 0.72;
-      const bounce = rolling ? Math.abs(Math.sin((rollT * 3.1 + index * 0.19) * Math.PI)) * (1 - settle) * 0.12 : 0;
-      const slideX = Math.cos(spinSeed * 4.1) * (1 - settle) * 0.22;
-      const slideZ = Math.sin(spinSeed * 3.7) * (1 - settle) * 0.16;
-      piece.position.set(layout.sceneX + slideX, 0.02 + bounce, layout.sceneZ + slideZ);
-      piece.rotation.x = rollX;
-      piece.rotation.y = layout.rotationY + rollY;
-      piece.rotation.z = layout.rotationZ + Math.sin(spinSeed * 2.4 + rollT * 7.2) * (1 - settle) * 0.36;
-      if (die.used) piece.traverse(child => {
-        if (child.material) {
-          const materials = Array.isArray(child.material) ? child.material : [child.material];
-          materials.forEach(material => {
-            material.transparent = true;
-            material.opacity = 0.32;
-          });
-        }
-      });
-      trayScene.add(piece);
+      const piece = makeLetterDie(makeTrayDieCell(die, source), true);
+      // Center the die mesh at the group origin so it rotates around its own centre.
+      // makeLetterDie offsets the die to y=0.41 for board placement; here we reset it
+      // so the group position represents the die's centre, not its bottom face.
+      piece.children[0].position.y = 0;
+      const home = rollStagePosition(index, state.roll.length);
+      const lane = rollLane(index, state.roll.length, home);
+      const baseRotY = [-0.32, 0.26, -0.18, 0.36, 0.22, -0.28, 0.18, -0.2][index % 8];
+      piece.userData = {
+        homeX: home.x,
+        homeZ: home.z,
+        startX: lane.startX,
+        startZ: lane.startZ,
+        endX: lane.endX,
+        endZ: lane.endZ,
+        laneOffset: lane.laneOffset,
+        rollDistance: lane.rollDistance,
+        rollDirection: lane.rollDirection,
+        baseRotationY: baseRotY,
+        // Primary tumble axis: perpendicular to direction of travel so the die pitches
+        // forward like a rolling wheel — this is the key to a "rolling" vs "sliding" feel.
+        // For travel direction θ, the perpendicular rolling axis is (sin θ, 0, -cos θ).
+        tumbleX: Math.sin(lane.rollDirection),
+        tumbleZ: -Math.cos(lane.rollDirection),
+        // Secondary wobble axis: along the travel direction — adds side-to-side lean
+        wobbleX: Math.cos(lane.rollDirection),
+        wobbleZ: Math.sin(lane.rollDirection),
+        // Two clean rotations — spinCount=2 → 4π → exact identity at t=1 (cleanest math)
+        spinCount: 2,
+        // Stagger: each die starts 40ms after previous
+        dropDelay: index * 0.040,
+        // Target quaternion — face-up with per-die yaw
+        targetQ: new THREE.Quaternion().setFromEuler(new THREE.Euler(0, baseRotY, 0)),
+        // Persistent collision offset — accumulated each frame so push-apart
+        // doesn't fight the lerp (die stays where it was pushed, no oscillation)
+        collOffsetX: 0,
+        collOffsetZ: 0
+      };
+      piece.scale.setScalar(0.96);
+      // Start position: group Y = die CENTRE height (since die is now centred at origin).
+      // seatedY in tickRollStage is TOP_H + 0.41 (centre of die when resting on board).
+      piece.position.set(piece.userData.startX, TOP_H + 0.41 + 0.55, piece.userData.startZ);
+      rollStageGroup.add(piece);
+    });
+    tickRollStage(performance.now());
+  }
+
+  function rollStagePosition(index, count) {
+    const cols = Math.ceil(count / 2);
+    const row = index >= cols ? 1 : 0;
+    const col = row ? index - cols : index;
+    const span = Math.min(6.4, Math.max(1.6, (cols - 1) * 1.8));
+    const x = cols === 1 ? 0 : -span / 2 + col * (span / (cols - 1));
+    return { x, z: row ? 1.4 : -1.4 };
+  }
+
+  function rollLane(index, count, home) {
+    const row = index >= Math.ceil(count / 2) ? 1 : 0;
+    const laneOffset = (row ? 0.32 : -0.32) + ((index % 2) ? 0.08 : -0.08);
+    const startX = -3.2 - index * 0.48;
+    const startZ = home.z + laneOffset;
+    const endX = home.x;
+    const endZ = home.z;
+    const rollDistance = Math.hypot(endX - startX, endZ - startZ);
+    const rollDirection = Math.atan2(endZ - startZ, endX - startX);
+    return { startX, startZ, endX, endZ, laneOffset, rollDistance, rollDirection };
+  }
+
+  function tickRollStage(now) {
+    if (!state.isRolling) return;
+    // seatedY is the die GROUP centre height when resting on the board.
+    // Die mesh is centred at group origin, half-height = 0.41, board top = TOP_H.
+    const seatedY = TOP_H + 0.41;
+
+    rollStageGroup.children.forEach((piece, index) => {
+      const ud = piece.userData;
+
+      // Per-die staggered local time
+      const localElapsed = Math.max(0, (now - state.rollStartedAt) / 1000 - ud.dropDelay);
+      const localDuration = ROLL_ANIMATION_MS / 1000 - ud.dropDelay;
+      const t = Math.min(localElapsed / localDuration, 1);
+
+      // Ease power 2.5: visible deceleration across the whole travel arc.
+      // At t=0.3 (entering view) ~41% rotation done; decelerates clearly to a stop.
+      const tEased = 1 - Math.pow(1 - t, 2.5);
+
+      // XZ position — lerp gives natural trajectory, collOffset persists collision displacement
+      const x = ud.startX + (ud.endX - ud.startX) * tEased + ud.collOffsetX;
+      const laneCurve = Math.sin(tEased * Math.PI) * ud.laneOffset * 0.24;
+      const z = ud.startZ + (ud.endZ - ud.startZ) * tEased + laneCurve + ud.collOffsetZ;
+
+      // Y: die centre falls from seatedY+0.55 to seatedY with a gentle arc bump
+      const fallY = Math.pow(1 - t, 1.5) * 0.55;
+      const arcY = seatedY + fallY + Math.sin(tEased * Math.PI) * 0.08;
+
+      // ROTATION — two full rotations (spinCount=2 → 4π), guaranteed face-up at t=1.
+      // setFromAxisAngle(axis, 4π) = exact identity → identity × targetQ = targetQ.
+      const primaryAngle = ud.spinCount * Math.PI * 2 * tEased;
+
+      // Wobble: small side-lean along travel direction, fades to 0 at t=1
+      const wobbleEnvelope = Math.sin(t * Math.PI) * Math.pow(1 - t, 0.8);
+      const wobbleAngle = wobbleEnvelope * 0.22;
+
+      _v3.set(ud.tumbleX, 0, ud.tumbleZ);
+      _qA.setFromAxisAngle(_v3, primaryAngle);
+      _vW.set(ud.wobbleX, 0, ud.wobbleZ);
+      _qB.setFromAxisAngle(_vW, wobbleAngle);
+      _qA.premultiply(_qB);
+      piece.quaternion.copy(_qA).multiply(ud.targetQ);
+
+      piece.scale.setScalar(0.96);
+      piece.position.set(x, arcY, z);
     });
 
-    const trayCamera = new THREE.PerspectiveCamera(34, width / height, 0.1, 30);
-    trayCamera.position.set(0, 6.5, 5.3);
-    trayCamera.lookAt(0, 0.18, 0);
-
-    trayRenderer.render(trayScene, trayCamera);
-    image.src = trayRenderer.domElement.toDataURL("image/png");
-    disposeObject(trayScene);
-    trayRenderer.dispose();
-    trayRenderer.forceContextLoss();
+    // Push-apart: only runs once dice are 60%+ of the way to their destinations.
+    // Early-flight dice are naturally spreading apart; running collision then just
+    // accumulates wrong offsets that cause the landing-zone pile-up.
+    const globalT = Math.min((now - state.rollStartedAt) / ROLL_ANIMATION_MS, 1);
+    const N = rollStageGroup.children.length;
+    if (N > 1 && globalT > 0.6) {
+      const pos = rollStageGroup.children.map(p => ({
+        x: p.position.x, z: p.position.z,
+        ox: p.position.x, oz: p.position.z,
+        p
+      }));
+      const MIN = 0.94;
+      for (let iter = 0; iter < 6; iter++) {
+        for (let i = 0; i < N; i++) {
+          for (let j = i + 1; j < N; j++) {
+            const dx = pos[j].x - pos[i].x;
+            const dz = pos[j].z - pos[i].z;
+            const d2 = dx * dx + dz * dz;
+            if (d2 < MIN * MIN && d2 > 1e-6) {
+              const d = Math.sqrt(d2);
+              const push = (MIN - d) * 0.5;
+              const nx = dx / d, nz = dz / d;
+              pos[i].x -= nx * push; pos[i].z -= nz * push;
+              pos[j].x += nx * push; pos[j].z += nz * push;
+            }
+          }
+        }
+      }
+      pos.forEach(({ x, z, ox, oz, p }) => {
+        p.userData.collOffsetX += x - ox;
+        p.userData.collOffsetZ += z - oz;
+        p.position.x = x;
+        p.position.z = z;
+      });
+    }
   }
 
   function renderWildcardPicker() {
     els.wildPicker.innerHTML = "";
     const selected = state.selectedWildIndex === null ? null : state.roll[state.selectedWildIndex];
-    const show = selected && selected.face === "*" && !selected.used && !state.locked;
+    const show = selected && selected.face === "*" && !selected.used && !state.locked && !state.isRolling;
     els.wildPicker.classList.toggle("show", Boolean(show));
     if (!show) return;
     LETTERS.forEach(letter => {
@@ -1296,7 +1410,7 @@
   }
 
   function beginDieDrag(event, index) {
-    if (state.locked || state.roll[index].used) return;
+    if (state.isRolling || state.locked || state.roll[index].used) return;
     const die = state.roll[index];
     if (die.face === "*" && !die.assigned) {
       state.selectedWildIndex = index;
@@ -1314,7 +1428,7 @@
   }
 
   function beginBoardDieDrag(event, placed) {
-    if (state.locked) return;
+    if (state.isRolling || state.locked) return;
     const cell = state.board[placed.r][placed.c];
     if (!cell) return;
     event.preventDefault();
@@ -1418,11 +1532,46 @@
     validateAndMaybeComplete();
   }
 
+  function checkFeasibility() {
+    const pool = {};
+    for (let r = 0; r < BOARD_SIZE; r++) {
+      for (let c = 0; c < BOARD_SIZE; c++) {
+        const cell = state.board[r][c];
+        if (cell) {
+          const l = cell.face === '*' ? (cell.assigned || null) : cell.letter;
+          if (l) pool[l] = (pool[l] || 0) + 1;
+        }
+      }
+    }
+    const wildcards = state.roll.filter(d => !d.used && d.face === '*').length;
+    state.roll.filter(d => !d.used && d.face !== '*').forEach(d => {
+      pool[d.letter] = (pool[d.letter] || 0) + 1;
+    });
+    const stuck = [];
+    state.roll.forEach((die, index) => {
+      if (die.used || die.face === '*') return;
+      const candidates = WORDS_BY_LETTER[die.letter] || [];
+      const canForm = candidates.some(word => {
+        const need = {};
+        for (const ch of word) need[ch] = (need[ch] || 0) + 1;
+        let wildcardsNeeded = 0;
+        for (const [ch, count] of Object.entries(need)) {
+          const have = pool[ch] || 0;
+          if (have < count) wildcardsNeeded += count - have;
+        }
+        return wildcardsNeeded <= wildcards;
+      });
+      if (!canForm) stuck.push(index);
+    });
+    return stuck;
+  }
+
   function validateAndMaybeComplete(options = {}) {
     const { pieces = true } = options;
     const validation = validateBoard();
     state.lastValidation = validation;
     state.lastScore = scoreBoard(validation);
+    state.stuckDice = state.isRolling ? [] : checkFeasibility();
     updateStatus(validation);
     renderAll({ pieces });
     if (validation.complete && !state.locked) completeRound();
@@ -1542,11 +1691,16 @@
 
   function updateStatus(validation) {
     if (state.locked) return;
+    if (state.isRolling) return setStatus("Rolling dice", "Your letters are landing in the tray.", "ready");
     if (validation.complete) return setStatus("Valid board", "The crossword locks automatically. Choose an upgrade.", "good");
     if (validation.unused > 0) return setStatus(`${validation.unused} dice left`, "Same dice, new faces. Drag every rolled die onto the board.", "ready");
     if (!validation.connected) return setStatus("Disconnected", "All placed dice must touch the same crossword.", "bad");
     if (validation.fragments.length) return setStatus("Fragment found", "Two-letter runs are not words. Break or extend them.", "bad");
-    if (validation.invalidWords.length) return setStatus("Unknown word", `${validation.invalidWords[0].text} is not in this prototype dictionary.`, "bad");
+    if (validation.invalidWords.length) return setStatus("Unknown word", `${validation.invalidWords[0].text} is not in the dictionary.`, "bad");
+    if (state.stuckDice?.length && validation.unused > 0) {
+      const letters = state.stuckDice.map(i => state.roll[i].letter).join(", ");
+      return setStatus("Looks stuck", `${letters} can't form any word with the letters in play.`, "bad");
+    }
     setStatus("Almost", "The structure is close. Keep shaping the board.", "ready");
   }
 
@@ -1692,36 +1846,23 @@
   }
 
   function reroll() {
-    if (state.rerolls <= 0 || state.locked) return;
+    if (state.isRolling || state.rerolls <= 0 || state.locked) return;
     state.rerolls -= 1;
     state.board = emptyBoard();
     state.selectedWildIndex = null;
     state.roll = rollDice();
-    validateAndMaybeComplete();
+    state.lastValidation = null;
+    state.lastScore = null;
+    beginRollAnimation();
   }
 
   function clearBoard() {
-    if (state.locked) return;
+    if (state.isRolling || state.locked) return;
     state.board = emptyBoard();
     state.roll.forEach(die => { die.used = false; });
     validateAndMaybeComplete();
   }
 
-  function seedSolve() {
-    if (state.locked) return;
-    clearBoard();
-    const map = SOLVE_MAPS[(state.round - 1) % SOLVE_MAPS.length];
-    map.slice(0, state.roll.length).forEach((slot, index) => {
-      const die = state.roll[index];
-      die.face = slot.l;
-      die.letter = slot.l;
-      die.assigned = slot.l;
-      const source = state.dice.find(d => d.id === die.dieId);
-      state.board[slot.r][slot.c] = { ...die, rollIndex: index, dieFaces: source ? [...source.faces] : [slot.l] };
-      die.used = true;
-    });
-    validateAndMaybeComplete();
-  }
 
   function updateHover(x, y) {
     const cell = pickTile(x, y);
@@ -1737,7 +1878,7 @@
   }
 
   renderer.domElement.addEventListener("pointerdown", event => {
-    if (drag || state.locked) return;
+    if (drag || state.isRolling || state.locked) return;
     if (event.button !== 0 && event.pointerType === "mouse") return;
     const placed = pickPlacedPiece(event.clientX, event.clientY);
     if (placed) {
@@ -1762,7 +1903,7 @@
       const ddx = event.clientX - lastPointer.x;
       const ddy = event.clientY - lastPointer.y;
       azimuth -= ddx * 0.008;
-      polar = Math.max(0.22, Math.min(1.25, polar - ddy * 0.006));
+      polar = Math.max(0.18, Math.min(1.35, polar - ddy * 0.006));
       updateCamera();
     }
     lastPointer = { x: event.clientX, y: event.clientY };
@@ -1787,6 +1928,7 @@
   }, { passive: false });
 
   window.addEventListener("keydown", event => {
+    if (state.isRolling) return;
     const key = event.key.toLowerCase();
     if (key === "r") reroll();
     if (key === "c") clearBoard();
@@ -1796,7 +1938,6 @@
   els.reroll.addEventListener("click", reroll);
   els.clear.addEventListener("click", clearBoard);
   els.newRun.addEventListener("click", newRun);
-  els.hint.addEventListener("click", seedSolve);
 
   function randomDie() {
     return state.dice[Math.floor(Math.random() * state.dice.length)];
@@ -1823,6 +1964,8 @@
     camera.top = viewSize;
     camera.bottom = -viewSize;
     camera.updateProjectionMatrix();
+    perspCamera.aspect = aspect;
+    perspCamera.updateProjectionMatrix();
     renderer.setSize(w, h);
     updateCamera();
   }
@@ -1834,10 +1977,28 @@
     const dt = prevT ? Math.min(t - prevT, 0.05) : 0;
     prevT = t;
     if (dropAnims.length) tickDropAnims(dt);
-    renderer.render(scene, camera);
+    if (state.isRolling) tickRollStage(now);
+    renderer.render(scene, usePerspective ? perspCamera : camera);
   }
 
   window.addEventListener("resize", onResize);
+
+  const DEFAULT_POLAR = 0.52;
+  const DEFAULT_AZIMUTH = Math.PI * 0.25;
+  const DEFAULT_VIEW_SIZE = 5.8;
+
+  els.perspBtn.addEventListener("click", () => {
+    usePerspective = !usePerspective;
+    els.perspBtn.textContent = usePerspective ? "PERSP" : "ISO";
+    els.perspBtn.classList.toggle("active", !usePerspective);
+  });
+
+  els.resetCamBtn.addEventListener("click", () => {
+    polar = DEFAULT_POLAR;
+    azimuth = DEFAULT_AZIMUTH;
+    viewSize = DEFAULT_VIEW_SIZE;
+    onResize();
+  });
 
   buildBoard();
   onResize();
