@@ -1,1285 +1,2009 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Lexicon</title>
-  <style>
-    :root {
-      color-scheme: dark;
-      --bg: #101211;
-      --surface: #171b19;
-      --surface-2: #202720;
-      --surface-3: #2a302a;
-      --ink: #f4f2ea;
-      --muted: #b8bdb2;
-      --quiet: #7d8679;
-      --line: rgba(244, 242, 234, 0.13);
-      --line-strong: rgba(244, 242, 234, 0.23);
-      --gold: #e4b84e;
-      --green: #78bd7d;
-      --blue: #75a9d7;
-      --red: #dc7565;
-      --tile: #f1efe6;
-      --tile-ink: #171a16;
-      --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      --mono: "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<title>Lexicon</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #101211;
+    --panel: rgba(18, 22, 20, 0.88);
+    --panel-strong: rgba(20, 25, 22, 0.96);
+    --ink: #f4f2ea;
+    --muted: #b9bfb4;
+    --quiet: #7d8679;
+    --line: rgba(244, 242, 234, 0.14);
+    --line-strong: rgba(244, 242, 234, 0.24);
+    --gold: #e4b84e;
+    --green: #79bd7d;
+    --blue: #76a9d9;
+    --red: #dc7565;
+    --tile: #f1efe6;
+    --tile-ink: #161914;
+    --shadow: 0 20px 60px rgba(0, 0, 0, 0.34);
+    --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --mono: "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; }
+  body {
+    background:
+      radial-gradient(circle at 16% 0%, rgba(228, 184, 78, 0.16), transparent 34vw),
+      #101211;
+    color: var(--ink);
+    font: 15px/1.45 var(--sans);
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  button { border: 0; font: inherit; }
+  #app { position: fixed; inset: 0; z-index: 1; }
+  canvas { display: block; cursor: grab; }
+  canvas.dragging { cursor: grabbing; }
+  canvas.placing { cursor: copy; }
+
+  .cam-btns {
+    position: fixed;
+    bottom: 18px;
+    right: calc(min(340px, 100vw - 36px) + 36px);
+    z-index: 20;
+    display: flex;
+    gap: 6px;
+  }
+  .cam-btn {
+    height: 34px;
+    padding: 0 12px;
+    border: 1px solid var(--line-strong);
+    border-radius: 8px;
+    background: rgba(6, 8, 7, 0.72);
+    color: var(--muted);
+    cursor: pointer;
+    font: 780 11px/1 var(--mono);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    backdrop-filter: blur(6px);
+  }
+  .cam-btn:hover { background: rgba(244, 242, 234, 0.12); color: var(--ink); }
+  .cam-btn.active { border-color: rgba(228, 184, 78, 0.46); color: #f4d47a; background: rgba(228, 184, 78, 0.12); }
+
+  .topbar {
+    position: fixed;
+    top: 18px;
+    left: 18px;
+    right: 18px;
+    z-index: 10;
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: 14px;
+    pointer-events: none;
+  }
+
+  .brand,
+  .hud,
+  .panel,
+  .modal-box {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--panel);
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(12px);
+    pointer-events: auto;
+  }
+
+  .brand {
+    width: min(420px, calc(100vw - 36px));
+    padding: 14px 16px;
+  }
+
+  h1, h2, p { margin: 0; }
+
+  h1 {
+    font-size: clamp(32px, 6vw, 56px);
+    line-height: 0.95;
+    font-weight: 860;
+    letter-spacing: 0;
+  }
+
+  .brand p {
+    margin-top: 8px;
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  .hud {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(82px, 1fr));
+    gap: 8px;
+    padding: 10px;
+    min-width: min(360px, calc(100vw - 36px));
+  }
+
+  .stat {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.035);
+    padding: 9px 10px;
+  }
+
+  .stat span {
+    display: block;
+    color: var(--quiet);
+    font: 800 10px/1 var(--mono);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .stat strong {
+    display: block;
+    margin-top: 7px;
+    font-size: 22px;
+    line-height: 1;
+  }
+
+  .tray {
+    position: fixed;
+    left: 18px;
+    bottom: 18px;
+    z-index: 10;
+    width: min(520px, calc(100vw - 36px));
+    padding: 14px;
+  }
+
+  .side {
+    position: fixed;
+    right: 18px;
+    bottom: 18px;
+    z-index: 10;
+    width: min(340px, calc(100vw - 36px));
+    max-height: min(58vh, 560px);
+    overflow: auto;
+    padding: 14px;
+  }
+
+  .panel h2 {
+    color: var(--muted);
+    font: 850 12px/1 var(--mono);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .status {
+    margin-top: 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: rgba(7, 9, 8, 0.55);
+    padding: 12px;
+  }
+
+  .status strong {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 17px;
+    line-height: 1.15;
+  }
+
+  .status span {
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  .status.good { border-color: rgba(121, 189, 125, 0.44); }
+  .status.bad { border-color: rgba(220, 117, 101, 0.46); }
+  .status.ready { border-color: rgba(228, 184, 78, 0.46); }
+
+  .dice {
+    position: relative;
+    height: clamp(214px, 26vw, 246px);
+    margin-top: 12px;
+    border: 1px solid rgba(244, 242, 234, 0.15);
+    border-radius: 8px;
+    background:
+      linear-gradient(180deg, rgba(244, 242, 234, 0.055), rgba(0, 0, 0, 0.14)),
+      rgba(6, 8, 7, 0.46);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      inset 0 -12px 24px rgba(0, 0, 0, 0.2),
+      0 14px 30px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+  }
+
+  .die {
+    position: absolute;
+    display: grid;
+    grid-template-rows: 24px 1fr 24px;
+    border: 1px solid rgba(22, 25, 20, 0.2);
+    border-radius: 8px;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(225, 218, 198, 0.96)),
+      var(--tile);
+    color: var(--tile-ink);
+    cursor: grab;
+    isolation: isolate;
+    padding: 6px 8px;
+    font-weight: 850;
+    line-height: 1;
+    box-shadow: 0 12px 20px rgba(0, 0, 0, 0.22), inset 0 -5px 0 rgba(0, 0, 0, 0.08);
+    transition: opacity 0.18s, transform 0.18s, border-color 0.12s, background 0.12s;
+    touch-action: none;
+  }
+
+  .die:hover {
+    border-color: rgba(228, 184, 78, 0.72);
+    transform: translateY(-2px);
+  }
+
+  .die.dragging {
+    opacity: 0.58;
+    cursor: grabbing;
+    border-color: rgba(228, 184, 78, 0.48);
+  }
+
+  .die.used {
+    opacity: 0.38;
+    cursor: default;
+    transform: none;
+    filter: grayscale(0.35);
+  }
+
+  .die.stuck {
+    border-color: rgba(228, 140, 50, 0.7);
+    box-shadow: 0 0 0 2px rgba(228, 140, 50, 0.18), 0 12px 20px rgba(0, 0, 0, 0.22);
+  }
+
+  .die.wild {
+    color: #735500;
+    border-color: rgba(228, 184, 78, 0.8);
+    background: linear-gradient(180deg, #ffefab, #efd070);
+  }
+
+  .die.has-wild {
+    border-color: rgba(228, 184, 78, 0.72);
+  }
+
+  .die.mutated .die-id::after {
+    content: "";
+    position: absolute;
+    top: -3px;
+    right: -5px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 0 3px rgba(121, 189, 125, 0.2);
+  }
+
+  .die-id {
+    position: relative;
+    justify-self: start;
+    align-self: start;
+    min-height: 15px;
+    border-radius: 999px;
+    background: rgba(23, 26, 22, 0.13);
+    color: rgba(23, 26, 22, 0.68);
+    padding: 4px 7px 0;
+    font: 900 9px/1 var(--mono);
+    letter-spacing: 0.05em;
+    z-index: 2;
+  }
+
+  .die-current {
+    position: relative;
+    display: grid;
+    place-items: center;
+    min-width: 0;
+    height: auto;
+    border-radius: 0;
+    background: transparent;
+    color: var(--tile-ink);
+    font: 950 46px/0.92 var(--sans);
+    box-shadow: none;
+    z-index: 2;
+  }
+
+  .die.wild .die-current {
+    color: #5d4200;
+  }
+
+  .die-faces {
+    position: relative;
+    align-self: end;
+    width: auto;
+    overflow: hidden;
+    text-align: center;
+    color: rgba(22, 25, 20, 0.58);
+    font: 850 9px/1.15 var(--mono);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    letter-spacing: 0.08em;
+    z-index: 2;
+  }
+
+  .dice.rolling .die {
+    opacity: 0;
+    transform: translate(var(--fly-x, 0), var(--fly-y, 18px)) scale(0.62) rotate(var(--fly-r, 0deg));
+    pointer-events: none;
+  }
+
+  .dice.settling .die {
+    animation: flyToTray 0.58s cubic-bezier(0.18, 0.88, 0.28, 1) backwards;
+    animation-delay: var(--settle-delay, 0ms);
+  }
+
+  @keyframes flyToTray {
+    from {
+      opacity: 0.08;
+      transform: translate(var(--fly-x, 0), var(--fly-y, 18px)) scale(0.62) rotate(var(--fly-r, 0deg));
     }
-
-    * { box-sizing: border-box; }
-
-    html, body { min-height: 100%; }
-
-    body {
-      margin: 0;
-      background:
-        radial-gradient(circle at 18% -10%, rgba(228, 184, 78, 0.18), transparent 34vw),
-        linear-gradient(180deg, rgba(120, 189, 125, 0.06), transparent 360px),
-        var(--bg);
-      color: var(--ink);
-      font: 15px/1.45 var(--sans);
-      letter-spacing: 0;
+    62% {
+      opacity: 1;
+      transform: translate(0, -7px) scale(1.04) rotate(0deg);
     }
-
-    button, input, select {
-      font: inherit;
+    to {
+      opacity: 1;
+      transform: translate(0, 0) scale(1) rotate(0deg);
     }
+  }
 
-    button {
-      border: 0;
-    }
+  .controls {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-top: 12px;
+  }
 
-    .app {
-      width: min(1220px, calc(100vw - 28px));
-      min-height: 100vh;
-      margin: 0 auto;
-      padding: 26px 0 34px;
-      display: grid;
-      grid-template-rows: auto 1fr;
-      gap: 18px;
-    }
+  .btn {
+    min-height: 38px;
+    border: 1px solid var(--line-strong);
+    border-radius: 8px;
+    background: rgba(244, 242, 234, 0.08);
+    color: var(--ink);
+    cursor: pointer;
+    font-weight: 780;
+  }
 
+  .btn:hover:not(:disabled) { background: rgba(244, 242, 234, 0.13); }
+  .btn:disabled { opacity: 0.44; cursor: not-allowed; }
+  .btn.primary {
+    border-color: rgba(228, 184, 78, 0.46);
+    color: #f4d47a;
+    background: rgba(228, 184, 78, 0.15);
+  }
+
+  .hint {
+    margin: 10px 0 0;
+    color: var(--quiet);
+    font-size: 12px;
+  }
+
+  .word-list,
+  .breakdown {
+    display: grid;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .word,
+  .row {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: rgba(7, 9, 8, 0.48);
+    padding: 9px 10px;
+  }
+
+  .word b { font-family: var(--mono); letter-spacing: 0.08em; }
+  .word span,
+  .row span { color: var(--quiet); font-size: 13px; }
+  .word.bad { border-color: rgba(220, 117, 101, 0.42); color: #f0a095; }
+  .row strong { color: var(--ink); }
+
+  .wild-picker {
+    display: none;
+    grid-template-columns: repeat(13, 1fr);
+    gap: 5px;
+    margin-top: 10px;
+  }
+
+  .wild-picker.show { display: grid; }
+
+  .letter-pick {
+    min-height: 28px;
+    border-radius: 6px;
+    background: #f1cc62;
+    color: #735500;
+    cursor: pointer;
+    font-weight: 850;
+  }
+
+  .drag-ghost {
+    position: fixed;
+    z-index: 30;
+    width: 70px;
+    height: 70px;
+    display: none;
+    place-items: center;
+    border-radius: 12px;
+    background: linear-gradient(145deg, #ffffff, #ddd7c8);
+    color: var(--tile-ink);
+    pointer-events: none;
+    font-size: 36px;
+    font-weight: 900;
+    box-shadow: 0 18px 35px rgba(0, 0, 0, 0.36), inset 0 -8px 0 rgba(0, 0, 0, 0.14);
+  }
+
+  .drag-ghost.show { display: grid; }
+
+  .modal {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    display: none;
+    place-items: center;
+    padding: 18px;
+    background: rgba(6, 8, 7, 0.72);
+  }
+
+  .modal.show { display: grid; }
+
+  .modal-box {
+    width: min(780px, 100%);
+    padding: 18px;
+    background: var(--panel-strong);
+  }
+
+  .modal-box h2 {
+    margin: 0;
+    font-size: clamp(28px, 6vw, 44px);
+    line-height: 1;
+  }
+
+  .modal-box p {
+    margin-top: 8px;
+    color: var(--muted);
+  }
+
+  .upgrade-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 16px;
+  }
+
+  .upgrade {
+    min-height: 150px;
+    text-align: left;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: rgba(244, 242, 234, 0.06);
+    color: var(--ink);
+    cursor: pointer;
+    padding: 14px;
+  }
+
+  .upgrade:hover {
+    border-color: rgba(228, 184, 78, 0.5);
+    background: rgba(244, 242, 234, 0.1);
+  }
+
+  .upgrade span {
+    display: inline-flex;
+    min-height: 24px;
+    align-items: center;
+    margin-bottom: 12px;
+    border-radius: 999px;
+    background: #0f1110;
+    color: var(--gold);
+    padding: 0 9px;
+    font: 800 10px/1 var(--mono);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .upgrade strong {
+    display: block;
+    font-size: 18px;
+    line-height: 1.16;
+  }
+
+  .upgrade em {
+    display: block;
+    margin-top: 8px;
+    color: var(--muted);
+    font-style: normal;
+    font-size: 13px;
+    line-height: 1.36;
+  }
+
+  @media (max-width: 880px) {
     .topbar {
-      display: flex;
-      align-items: end;
-      justify-content: space-between;
-      gap: 18px;
-      padding-bottom: 18px;
-      border-bottom: 1px solid var(--line-strong);
+      flex-direction: column;
+      right: auto;
+      width: calc(100vw - 36px);
     }
 
-    .brand h1 {
-      margin: 0;
-      font-size: clamp(36px, 7vw, 72px);
-      line-height: 0.92;
-      font-weight: 850;
-    }
+    .hud { width: 100%; }
 
-    .brand p {
-      max-width: 620px;
-      margin: 10px 0 0;
-      color: var(--muted);
-      font-size: 16px;
-    }
-
-    .hud {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(86px, 1fr));
-      gap: 8px;
-      min-width: min(100%, 340px);
-    }
-
-    .stat {
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: rgba(23, 27, 25, 0.82);
-      padding: 10px 12px;
-    }
-
-    .stat span {
-      display: block;
-      color: var(--quiet);
-      font: 750 11px/1 var(--mono);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-    }
-
-    .stat strong {
-      display: block;
-      margin-top: 7px;
-      font-size: 21px;
-      line-height: 1;
-    }
-
-    .game {
-      display: grid;
-      grid-template-columns: minmax(230px, 0.78fr) minmax(320px, 1.08fr) minmax(260px, 0.84fr);
-      gap: 16px;
-      align-items: start;
-    }
-
-    .panel {
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: rgba(23, 27, 25, 0.9);
-      padding: 16px;
-    }
-
-    .panel h2 {
-      margin: 0;
-      font-size: 14px;
-      line-height: 1.1;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      font-family: var(--mono);
-      color: var(--muted);
-    }
-
-    .status {
-      min-height: 84px;
-      margin-top: 14px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: #0f1110;
-      padding: 13px;
-    }
-
-    .status strong {
-      display: block;
-      margin-bottom: 4px;
-      color: var(--ink);
-      font-size: 18px;
-      line-height: 1.2;
-    }
-
-    .status span {
-      color: var(--muted);
-      font-size: 14px;
-    }
-
-    .status.good { border-color: rgba(120, 189, 125, 0.45); }
-    .status.bad { border-color: rgba(220, 117, 101, 0.42); }
-    .status.ready { border-color: rgba(228, 184, 78, 0.46); }
-
-    .dice {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(86px, 1fr));
-      gap: 10px;
-      margin-top: 14px;
-    }
-
-    .die {
-      position: relative;
-      display: grid;
-      grid-template-rows: auto minmax(38px, 1fr) auto;
-      align-items: center;
-      min-width: 0;
-      min-height: 96px;
-      border: 1px solid rgba(244, 242, 234, 0.32);
-      border-radius: 12px;
-      background:
-        linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(218, 214, 200, 0.96)),
-        var(--tile);
-      color: var(--tile-ink);
-      cursor: pointer;
-      font-weight: 850;
-      line-height: 1;
-      padding: 8px;
-      box-shadow:
-        inset 0 -9px 0 rgba(0, 0, 0, 0.13),
-        inset 0 1px 0 rgba(255, 255, 255, 0.72),
-        0 10px 20px rgba(0, 0, 0, 0.2);
-      transition: transform 0.08s, border-color 0.12s, opacity 0.12s, box-shadow 0.12s;
-    }
-
-    .die:hover { transform: translateY(-1px); }
-    .die.selected {
-      border-color: var(--gold);
-      box-shadow:
-        0 0 0 2px rgba(228, 184, 78, 0.34),
-        inset 0 -9px 0 rgba(0, 0, 0, 0.13),
-        inset 0 1px 0 rgba(255, 255, 255, 0.72),
-        0 12px 24px rgba(0, 0, 0, 0.28);
-    }
-
-    .die.used {
-      opacity: 0.46;
-      cursor: default;
-      transform: none;
-    }
-
-    .die.wild {
-      background:
-        linear-gradient(145deg, #ffe38a, #dcae30);
-      color: #775807;
-      border-color: rgba(228, 184, 78, 0.8);
-    }
-
-    .die.has-wild {
-      border-color: rgba(228, 184, 78, 0.72);
-      box-shadow:
-        inset 0 -9px 0 rgba(0, 0, 0, 0.13),
-        inset 0 1px 0 rgba(255, 255, 255, 0.72),
-        0 0 0 2px rgba(228, 184, 78, 0.16),
-        0 10px 20px rgba(0, 0, 0, 0.2);
-    }
-
-    .die.mutated::after {
-      content: "";
-      position: absolute;
-      top: 8px;
-      right: 8px;
-      width: 9px;
-      height: 9px;
-      border-radius: 50%;
-      background: var(--green);
-      box-shadow: 0 0 0 3px rgba(120, 189, 125, 0.2);
-    }
-
-    .die-id {
-      justify-self: start;
-      min-height: 18px;
-      border-radius: 999px;
-      background: rgba(23, 26, 22, 0.1);
-      color: rgba(23, 26, 22, 0.68);
-      padding: 4px 7px 0;
-      font: 900 10px/1 var(--mono);
-      letter-spacing: 0.05em;
-    }
-
-    .die-face {
-      display: grid;
-      place-items: center;
-      min-height: 42px;
-      font-size: clamp(30px, 5vw, 42px);
-      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
-    }
-
-    .die-faces {
-      width: 100%;
-      overflow: hidden;
-      text-align: center;
-      color: rgba(23, 26, 22, 0.58);
-      font: 850 9px/1.15 var(--mono);
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      letter-spacing: 0.02em;
-    }
-
-    .controls {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-top: 14px;
-    }
-
-    .btn {
-      min-height: 42px;
-      border: 1px solid var(--line-strong);
-      border-radius: 8px;
-      background: var(--surface-2);
-      color: var(--ink);
-      cursor: pointer;
-      font-weight: 760;
-    }
-
-    .btn:hover:not(:disabled) { background: var(--surface-3); }
-    .btn:disabled {
-      cursor: not-allowed;
-      opacity: 0.45;
-    }
-
-    .btn.primary {
-      border-color: rgba(228, 184, 78, 0.46);
-      background: rgba(228, 184, 78, 0.17);
-      color: #f6d982;
-    }
-
-    .hint {
-      margin: 12px 0 0;
-      color: var(--quiet);
-      font-size: 13px;
-    }
-
-    .board-wrap {
-      display: grid;
-      gap: 14px;
-      justify-items: center;
-    }
-
-    .board {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 7px;
-      width: min(100%, 430px);
-      touch-action: manipulation;
-    }
-
-    .cell {
-      display: grid;
-      place-items: center;
-      aspect-ratio: 1;
-      border: 1px solid var(--line);
-      border-radius: 7px;
-      background: rgba(255, 255, 255, 0.035);
-      color: var(--ink);
-      cursor: pointer;
-      font-size: clamp(24px, 6vw, 44px);
-      font-weight: 850;
-      line-height: 1;
-      transition: background 0.12s, border-color 0.12s, transform 0.08s;
-    }
-
-    .cell:hover { border-color: rgba(244, 242, 234, 0.36); }
-    .cell.filled {
-      background: var(--tile);
-      color: var(--tile-ink);
-      border-color: rgba(244, 242, 234, 0.42);
-      box-shadow: inset 0 -5px 0 rgba(0, 0, 0, 0.13);
-    }
-
-    .cell.intersection {
-      outline: 2px solid rgba(117, 169, 215, 0.45);
-      outline-offset: -4px;
-    }
-
-    .cell.invalid {
-      border-color: rgba(220, 117, 101, 0.65);
-      box-shadow: inset 0 -5px 0 rgba(0, 0, 0, 0.13), 0 0 0 2px rgba(220, 117, 101, 0.18);
-    }
-
-    .cell.wild {
-      background: #f1cc62;
-      color: #775807;
-    }
-
-    .word-list {
-      display: grid;
-      gap: 8px;
-      margin-top: 14px;
-    }
-
-    .word {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: #101210;
-      padding: 10px 11px;
-    }
-
-    .word b {
-      font-family: var(--mono);
-      letter-spacing: 0.08em;
-    }
-
-    .word span {
-      color: var(--quiet);
-      font-size: 13px;
-    }
-
-    .word.bad {
-      border-color: rgba(220, 117, 101, 0.42);
-      color: #f0a095;
-    }
-
-    .breakdown {
-      display: grid;
-      gap: 8px;
-      margin-top: 14px;
-    }
-
-    .row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      border-bottom: 1px solid var(--line);
-      padding-bottom: 8px;
-      color: var(--muted);
-    }
-
-    .row:last-child {
-      border-bottom: 0;
-      padding-bottom: 0;
-    }
-
-    .row strong {
-      color: var(--ink);
-    }
-
-    .upgrades {
-      position: fixed;
-      inset: 0;
+    .side {
       display: none;
-      place-items: center;
-      z-index: 20;
-      background: rgba(8, 10, 9, 0.72);
-      padding: 18px;
     }
 
-    .upgrades.show { display: grid; }
-
-    .upgrade-box {
-      width: min(760px, 100%);
-      border: 1px solid var(--line-strong);
-      border-radius: 8px;
-      background: #151917;
-      padding: 18px;
-      box-shadow: 0 28px 70px rgba(0, 0, 0, 0.42);
-    }
-
-    .upgrade-box h2 {
-      margin: 0;
-      font-size: clamp(26px, 6vw, 44px);
-      line-height: 1;
-    }
-
-    .upgrade-box p {
-      margin: 8px 0 0;
-      color: var(--muted);
-    }
-
+    .controls,
     .upgrade-grid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 10px;
-      margin-top: 16px;
+      grid-template-columns: 1fr;
     }
+  }
 
-    .upgrade {
-      min-height: 150px;
-      text-align: left;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: var(--surface);
-      color: var(--ink);
-      padding: 14px;
-      cursor: pointer;
-    }
-
-    .upgrade:hover {
-      border-color: rgba(228, 184, 78, 0.5);
-      background: var(--surface-2);
-    }
-
-    .upgrade span {
-      display: inline-flex;
-      min-height: 24px;
-      align-items: center;
-      margin-bottom: 12px;
-      border-radius: 999px;
-      background: #0f1110;
-      color: var(--gold);
-      padding: 0 9px;
-      font: 800 10px/1 var(--mono);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-    }
-
-    .upgrade strong {
-      display: block;
-      font-size: 18px;
-      line-height: 1.16;
-    }
-
-    .upgrade em {
-      display: block;
-      margin-top: 8px;
-      color: var(--muted);
-      font-style: normal;
-      font-size: 13px;
-      line-height: 1.36;
-    }
-
-    .wild-picker {
-      display: none;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 6px;
-      margin-top: 12px;
-    }
-
-    .wild-picker.show { display: grid; }
-
-    .letter-pick {
-      min-height: 34px;
-      border-radius: 7px;
-      background: #f1cc62;
-      color: #775807;
-      cursor: pointer;
-      font-weight: 850;
-    }
-
-    @media (max-width: 980px) {
-      .topbar {
-        align-items: stretch;
-        flex-direction: column;
-      }
-
-      .game {
-        grid-template-columns: 1fr;
-      }
-
-      .panel.board-panel {
-        order: -1;
-      }
-
-      .board {
-        width: min(100%, 380px);
-      }
-    }
-
-    @media (max-width: 640px) {
-      .app {
-        width: min(100vw - 18px, 1220px);
-        padding-top: 16px;
-      }
-
-      .hud,
-      .upgrade-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .dice {
-        grid-template-columns: repeat(4, 1fr);
-      }
-
-      .controls {
-        grid-template-columns: 1fr;
-      }
-    }
-  </style>
+  @media (max-width: 600px) {
+    .brand { padding: 12px; }
+    .tray { padding: 12px; }
+    .dice { height: 210px; }
+    .die-current { font-size: 36px; }
+    .die-faces { font-size: 8px; }
+  }
+</style>
 </head>
 <body>
-  <main class="app">
-    <header class="topbar">
-      <div class="brand">
-        <h1>Lexicon</h1>
-        <p>Build one connected crossword from every die. The round ends the instant the board becomes valid.</p>
-      </div>
-      <div class="hud" aria-label="Run stats">
-        <div class="stat"><span>Round</span><strong id="roundStat">1</strong></div>
-        <div class="stat"><span>Score</span><strong id="scoreStat">0</strong></div>
-        <div class="stat"><span>Target</span><strong id="targetStat">24</strong></div>
-      </div>
-    </header>
+  <div id="app"></div>
 
-    <section class="game">
-      <aside class="panel">
-        <h2>Roll</h2>
-        <div id="status" class="status ready">
-          <strong>Make a crossword</strong>
-          <span>Select a die, then click a board cell.</span>
-        </div>
-        <div class="dice" id="diceTray" aria-label="Dice tray"></div>
-        <div class="wild-picker" id="wildPicker" aria-label="Wildcard letter picker"></div>
-        <div class="controls">
-          <button class="btn primary" id="rerollBtn">Reroll 1</button>
-          <button class="btn" id="clearBtn">Clear Board</button>
-          <button class="btn" id="newRunBtn">New Run</button>
-          <button class="btn" id="hintBtn">Seed Solve</button>
-        </div>
-        <p class="hint">Click placed tiles to pull them back. Wildcards choose a letter before placement.</p>
-      </aside>
-
-      <section class="panel board-panel">
-        <h2>Board</h2>
-        <div class="board-wrap">
-          <div class="board" id="board" aria-label="5 by 5 crossword board"></div>
-        </div>
-      </section>
-
-      <aside class="panel">
-        <h2>Validation</h2>
-        <div class="word-list" id="wordList"></div>
-        <div class="breakdown" id="breakdown"></div>
-      </aside>
+  <header class="topbar">
+    <section class="brand">
+      <h1>Lexicon</h1>
+      <p>Drag persistent dice onto the board. Same dice, new faces; use every rolled die in one connected crossword.</p>
     </section>
-  </main>
+    <section class="hud" aria-label="Run stats">
+      <div class="stat"><span>Round</span><strong id="roundStat">1</strong></div>
+      <div class="stat"><span>Score</span><strong id="scoreStat">0</strong></div>
+      <div class="stat"><span>Target</span><strong id="targetStat">24</strong></div>
+    </section>
+  </header>
 
-  <div class="upgrades" id="upgradeModal" role="dialog" aria-modal="true" aria-labelledby="upgradeTitle">
-    <div class="upgrade-box">
+  <div class="cam-btns">
+    <button class="cam-btn" id="resetCamBtn">Reset</button>
+    <button class="cam-btn active" id="perspBtn">ISO</button>
+  </div>
+
+  <aside class="panel tray">
+    <h2>Dice</h2>
+    <div id="status" class="status ready">
+      <strong>Roll ready</strong>
+      <span>Drag a die onto a 3D tile.</span>
+    </div>
+    <div class="dice" id="diceTray" aria-label="Dice tray"></div>
+    <div class="wild-picker" id="wildPicker" aria-label="Wildcard letter picker"></div>
+    <div class="controls">
+      <button class="btn primary" id="rerollBtn">Reroll 1</button>
+      <button class="btn" id="clearBtn">Clear</button>
+      <button class="btn" id="newRunBtn">New Run</button>
+    </div>
+    <p class="hint">Drag from tray to board. Drag placed dice to move them or drop off-board to return.</p>
+  </aside>
+
+  <aside class="panel side">
+    <h2>Validation</h2>
+    <div class="word-list" id="wordList"></div>
+    <div class="breakdown" id="breakdown"></div>
+  </aside>
+
+  <div class="drag-ghost" id="dragGhost"></div>
+
+  <div class="modal" id="upgradeModal" role="dialog" aria-modal="true" aria-labelledby="upgradeTitle">
+    <div class="modal-box">
       <h2 id="upgradeTitle">Round Complete</h2>
       <p id="upgradeSummary">Choose one upgrade. Difficulty rises next round.</p>
       <div class="upgrade-grid" id="upgradeGrid"></div>
     </div>
   </div>
 
+  <script src="enable-words.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script>
-    const BOARD_SIZE = 5;
-    const RARE = new Set(["J", "Q", "X", "Z", "K", "V", "W", "Y"]);
-    const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+  const BOARD_SIZE = 5;
+  const TILE = 1;
+  const TOP_H = 0.18;
+  const DIRT_H = 0.42;
+  const RARE = new Set(["J", "Q", "X", "Z", "K", "V", "W", "Y"]);
+  const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
-    const WORDS = new Set(`
-      ACE ACED ACES ACHE ACID ACORN ACT ACTS ADD AGE AGES AIR AIRE ALERT ALONE ALSO ALTER AMBER ANCHOR AND ANEW
-      ANT ANTE APE APEX ARC AREA ARENA ARM ARMS ART ARTS ASH ASHEN ATOM AURA AVID AXE AXES
-      BAD BAKE BAKER BARK BARN BASE BASED BASIC BAST BAT BATH BEAD BEAM BEAN BEAR BEARD BEAST BEAT BEATS BEND BENT
-      BIRD BITE BLACK BLADE BLEND BOLD BONE BONES BORN BREAD BREAK BRICK BRIDGE BRINE BRING BROAD BROKE BROWN BURN
-      CAB CABLE CAGE CAKE CALM CAMP CAN CANE CARED CARGO CART CASE CAST CAVE CEDAR CHAIN CHAIR CHALK CHARM CHART
-      CHASE CHEST CHIME CLAY CLEAN CLEAR CLERK CLIMB CLOCK CLONE CLOSE CLOUD COAST CODE COLD CONE CORD CORE CORN
-      CRANE CRATE CREAM CROWN CURE CURVE
-      DARE DARK DART DATE DAWN DEAL DEAR DECK DEER DICE DINE DIRT DIVE DOCK DOME DONE DOOR DOVE DRAG DRAIN DRAW
-      DREAM DUNE DUSK
-      EAGER EARN EARTH EAST EAT ECHO EDGE EEL ELM EMBER END ENTER EON EROS EVER EVIL EXACT EXIT
-      FACE FACT FADE FAIR FARM FAST FATE FERN FIELD FILE FINE FIRE FIRM FISH FIVE FLAME FLARE FLEET FLOOD FLOOR
-      FLOW FLOWER FOCUS FOLD FORCE FORGE FORM FRAME FRESH FROST
-      GAME GATE GEAR GHOST GLADE GLASS GLOW GOAL GOLD GONE GRAIN GRAPE GRAPH GRASS GRAVE GREAT GREEN GRID GRIN GROVE
-      HAIL HAIR HAND HARBOR HARD HARE HARM HARP HASTE HAT HATE HAZE HEAL HEAR HEART HEAT HELM HERB HILL HIVE HOME
-      HONEY HOPE HORN HORSE HOST HOUSE
-      ICE ICED ICON IDEA IDLE IMAGE INDEX INK IRON ISLE IVY
-      JADE JAR JAZZ JEST JOIN JOLT JUMP JUNE JUNK
-      KEEN KEEP KITE KNEAD KNEE KNIFE KNOT
-      LACE LAKE LANE LARK LAST LATE LEAF LEAN LEARN LEMON LEND LENS LEXICON LIME LINE LION LIST LONE LONG LOOM
-      LOOP LORD LORE LOSE LOST LOVE
-      MAGE MAIL MAIN MAKE MARCH MARK MARS MATE MAZE MEAL MEAN MEND MENTOR MILE MIND MINE MINT MIST MODE MOON MORE
-      MORN MOUSE MOVE MUSE
-      NAME NEAR NEAT NEST NEWT NIGHT NODE NOISE NORTH NOTE NOVA
-      OAK OAR OASIS OCEAN ODOR OLIVE ONCE OPAL OPEN ORBIT ORDER ORE ORGAN OTHER OVEN
-      PACE PAGE PAIR PALE PANEL PARK PART PASTE PATH PEAK PEAR PINE PLAIN PLANE PLANT PLATE PLAY PLOT POEM POINT
-      POND PORT POST PRIDE PRIME PRINT PROOF
-      QUART QUEEN QUEST QUICK QUIET QUILL
-      RACE RAIN RAISE RAKE RANK RARE RATE RAVEN REACH READ READY REAL REALM REED REND REST RICE RICH RING RIPE
-      RISE ROAD ROAM ROAST ROBE ROCK RODE ROLL ROOT ROSE ROUND ROUTE
-      SAGE SAIL SALT SAME SAND SAVE SCAR SCALE SCORE SEAL SEAM SEAT SEED SEEK SEEN SENSE SHADE SHALE SHAPE SHARE
-      SHARP SHEAR SHEET SHELF SHINE SHORE SHORT SILK SINK SITE SLATE SLEEP SLICE SLOPE SMILE SMOKE SNAKE SOLAR SOLVE
-      SONG SORT SOUND SPACE SPARE SPARK SPEAR SPICE SPIRE SPORE STACK STAGE STAIR STAKE STALE STAND STARE STARK START
-      STEAM STEEL STEER STEM STEP STONE STORE STORM STORY STRAP STREAM STREET STRING STRONG SUN SWAN SWEAR SWEET
-      TACK TAIL TAKE TALE TALK TAME TANK TAPE TASK TEAM TEAR TEND TENT TERM TEST TEXT THAN THORN THREAD THREE TIDE
-      TILE TIME TONE TOOL TRACE TRACK TRADE TRAIL TRAIN TREAD TREE TRIAL TRIBE TRICK TRUE TUNE TURN
-      VALE VASE VAST VEIL VEIN VINE VITAL VOID VOTE
-      WADE WAGE WAKE WALL WAND WARM WAVE WEAR WEST WHEEL WIDE WILD WIND WINE WING WIRE WISE WOLF WORD WORLD WORTH
-      YARD YARN YEAR YIELD YOUNG
-      ZEAL ZERO ZONE
-    `.trim().split(/\s+/));
-
-    const SOLVE_MAPS = [
-      [
-        { r: 1, c: 0, l: "S" }, { r: 1, c: 1, l: "T" }, { r: 1, c: 2, l: "O" }, { r: 1, c: 3, l: "N" }, { r: 1, c: 4, l: "E" },
-        { r: 2, c: 0, l: "A" }, { r: 3, c: 0, l: "L" }, { r: 4, c: 0, l: "T" }
-      ],
-      [
-        { r: 1, c: 0, l: "C" }, { r: 1, c: 1, l: "R" }, { r: 1, c: 2, l: "A" }, { r: 1, c: 3, l: "N" }, { r: 1, c: 4, l: "E" },
-        { r: 2, c: 2, l: "R" }, { r: 3, c: 2, l: "T" }, { r: 0, c: 2, l: "A" }
-      ],
-      [
-        { r: 1, c: 0, l: "P" }, { r: 1, c: 1, l: "L" }, { r: 1, c: 2, l: "A" }, { r: 1, c: 3, l: "N" }, { r: 1, c: 4, l: "T" },
-        { r: 0, c: 2, l: "E" }, { r: 2, c: 2, l: "A" }, { r: 3, c: 2, l: "R" }
-      ],
-      [
-        { r: 1, c: 0, l: "S" }, { r: 1, c: 1, l: "C" }, { r: 1, c: 2, l: "A" }, { r: 1, c: 3, l: "L" }, { r: 1, c: 4, l: "E" },
-        { r: 0, c: 2, l: "R" }, { r: 2, c: 2, l: "M" }, { r: 3, c: 2, l: "A" }
-      ],
-      [
-        { r: 1, c: 0, l: "G" }, { r: 1, c: 1, l: "R" }, { r: 1, c: 2, l: "A" }, { r: 1, c: 3, l: "P" }, { r: 1, c: 4, l: "E" },
-        { r: 0, c: 2, l: "T" }, { r: 2, c: 2, l: "R" }, { r: 3, c: 2, l: "A" }
-      ],
-      [
-        { r: 1, c: 0, l: "F" }, { r: 1, c: 1, l: "L" }, { r: 1, c: 2, l: "A" }, { r: 1, c: 3, l: "M" }, { r: 1, c: 4, l: "E" },
-        { r: 0, c: 2, l: "R" }, { r: 2, c: 2, l: "A" }, { r: 3, c: 2, l: "K" }
-      ]
-    ];
-
-    const STARTING_DICE_FACES = [
-      ["S", "A", "R", "T", "E", "N"],
-      ["T", "E", "A", "O", "L", "R"],
-      ["O", "A", "I", "N", "C", "D"],
-      ["N", "R", "E", "S", "T", "M"],
-      ["E", "O", "A", "L", "P", "H"],
-      ["A", "I", "U", "E", "Y", "O"],
-      ["L", "C", "R", "S", "D", "G"],
-      ["T", "N", "M", "K", "P", "B"]
-    ];
-
-    const ADD_DIE_FACES = [
-      ["A", "E", "I", "O", "N", "R"],
-      ["S", "T", "L", "C", "D", "M"],
-      ["P", "B", "G", "F", "W", "Y"],
-      ["H", "V", "K", "J", "X", "Z"]
-    ];
-
-    const baseDice = STARTING_DICE_FACES.map((faces, i) => ({
-      id: i + 1,
-      faces: [...faces],
-      wild: false,
-      upgrades: []
-    }));
-
-    let state = {};
-    const els = {
-      round: document.getElementById("roundStat"),
-      score: document.getElementById("scoreStat"),
-      target: document.getElementById("targetStat"),
-      status: document.getElementById("status"),
-      tray: document.getElementById("diceTray"),
-      board: document.getElementById("board"),
-      wordList: document.getElementById("wordList"),
-      breakdown: document.getElementById("breakdown"),
-      reroll: document.getElementById("rerollBtn"),
-      clear: document.getElementById("clearBtn"),
-      newRun: document.getElementById("newRunBtn"),
-      hint: document.getElementById("hintBtn"),
-      modal: document.getElementById("upgradeModal"),
-      upgradeGrid: document.getElementById("upgradeGrid"),
-      upgradeSummary: document.getElementById("upgradeSummary"),
-      wildPicker: document.getElementById("wildPicker")
-    };
-
-    function cloneDice() {
-      return baseDice.map(die => ({ id: die.id, faces: [...die.faces], wild: die.wild, upgrades: [...die.upgrades] }));
+  const WORDS = new Set(window.LEXICON_WORDS || []);
+  const WORDS_BY_LETTER = {};
+  for (const word of WORDS) {
+    for (const ch of word) {
+      if (!WORDS_BY_LETTER[ch]) WORDS_BY_LETTER[ch] = [];
+      WORDS_BY_LETTER[ch].push(word);
     }
+  }
 
-    function newRun() {
-      state = {
-        round: 1,
-        score: 0,
-        target: 24,
-        rerollsBase: 1,
-        rerolls: 1,
-        nextDieId: baseDice.length + 1,
-        dice: cloneDice(),
-        roll: [],
-        board: emptyBoard(),
-        selectedDie: null,
-        pendingWild: null,
-        locked: false,
-        upgrades: {
-          intersectionBonus: 0,
-          fiveBonus: 0,
-          rareBonus: 0,
-          consonantBonus: 0
-        },
-        lastValidation: null,
-        lastScore: null
-      };
-      startRound();
-    }
 
-    function emptyBoard() {
-      return Array.from({ length: BOARD_SIZE }, () => Array.from({ length: BOARD_SIZE }, () => null));
-    }
+  const STARTING_DICE_FACES = [
+    ["S", "A", "R", "T", "E", "N"],
+    ["T", "E", "A", "O", "L", "R"],
+    ["O", "A", "I", "N", "C", "D"],
+    ["N", "R", "E", "S", "T", "M"],
+    ["E", "O", "A", "L", "P", "H"],
+    ["A", "I", "U", "E", "Y", "O"],
+    ["L", "C", "R", "S", "D", "G"],
+    ["T", "N", "M", "K", "P", "B"]
+  ];
 
-    function startRound() {
-      state.board = emptyBoard();
-      state.selectedDie = null;
-      state.pendingWild = null;
-      state.locked = false;
-      state.rerolls = state.rerollsBase;
-      state.roll = rollDice();
-      els.modal.classList.remove("show");
-      render();
-      validateAndMaybeComplete();
-    }
+  const ADD_DIE_FACES = [
+    ["A", "E", "I", "O", "N", "R"],
+    ["S", "T", "L", "C", "D", "M"],
+    ["P", "B", "G", "F", "W", "Y"],
+    ["H", "V", "K", "J", "X", "Z"]
+  ];
 
-    function rollDice() {
-      return state.dice.map(die => {
-        const letter = die.faces[Math.floor(Math.random() * die.faces.length)];
-        return {
-          id: `${state.round}-${die.id}-${Math.random().toString(36).slice(2)}`,
-          dieId: die.id,
-          face: letter,
-          letter,
-          assigned: letter === "*" ? "" : letter,
-          used: false
-        };
-      });
-    }
+  const els = {
+    app: document.getElementById("app"),
+    round: document.getElementById("roundStat"),
+    score: document.getElementById("scoreStat"),
+    target: document.getElementById("targetStat"),
+    status: document.getElementById("status"),
+    tray: document.getElementById("diceTray"),
+    wildPicker: document.getElementById("wildPicker"),
+    wordList: document.getElementById("wordList"),
+    breakdown: document.getElementById("breakdown"),
+    reroll: document.getElementById("rerollBtn"),
+    clear: document.getElementById("clearBtn"),
+    newRun: document.getElementById("newRunBtn"),
 
-    function render() {
-      els.round.textContent = state.round;
-      els.score.textContent = state.score;
-      els.target.textContent = state.target;
-      els.reroll.textContent = `Reroll ${state.rerolls}`;
-      els.reroll.disabled = state.rerolls <= 0 || state.locked;
-      renderDice();
-      renderBoard();
-      renderWildcardPicker();
-      renderValidation();
-    }
+    ghost: document.getElementById("dragGhost"),
+    modal: document.getElementById("upgradeModal"),
+    upgradeGrid: document.getElementById("upgradeGrid"),
+    upgradeSummary: document.getElementById("upgradeSummary"),
+    perspBtn: document.getElementById("perspBtn"),
+    resetCamBtn: document.getElementById("resetCamBtn")
+  };
 
-    function renderDice() {
-      els.tray.innerHTML = "";
-      state.roll.forEach((die, index) => {
-        const source = state.dice.find(d => d.id === die.dieId);
-        const faceText = source ? source.faces.join(" ") : "";
-        const isMutated = source && (source.upgrades.length > 0 || source.faces.length > 6);
-        const btn = document.createElement("button");
-        btn.className = `die${die.face === "*" ? " wild" : ""}${source?.wild ? " has-wild" : ""}${isMutated ? " mutated" : ""}${die.used ? " used" : ""}${state.selectedDie === index ? " selected" : ""}`;
-        btn.type = "button";
-        btn.disabled = die.used || state.locked;
-        btn.title = `D${die.dieId}: ${faceText}`;
-        btn.innerHTML = `
-          <span class="die-id">D${die.dieId}</span>
-          <span class="die-face">${die.face === "*" ? (die.assigned || "*") : die.letter}</span>
-          <span class="die-faces">${faceText}</span>
-        `;
-        btn.addEventListener("click", () => selectDie(index));
-        els.tray.appendChild(btn);
-      });
-    }
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  els.app.appendChild(renderer.domElement);
 
-    function renderBoard() {
-      els.board.innerHTML = "";
-      const intersections = findIntersections();
-      const invalidCells = new Set((state.lastValidation?.invalidCells || []).map(posKey));
-      for (let r = 0; r < BOARD_SIZE; r++) {
-        for (let c = 0; c < BOARD_SIZE; c++) {
-          const cell = state.board[r][c];
-          const btn = document.createElement("button");
-          btn.type = "button";
-          btn.className = "cell";
-          if (cell) {
-            btn.classList.add("filled");
-            if (cell.face === "*") btn.classList.add("wild");
-            if (intersections.has(posKey({ r, c }))) btn.classList.add("intersection");
-            if (invalidCells.has(posKey({ r, c }))) btn.classList.add("invalid");
-            btn.textContent = cell.assigned || "*";
-          } else {
-            btn.textContent = "";
-          }
-          btn.addEventListener("click", () => onCellClick(r, c));
-          els.board.appendChild(btn);
-        }
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x101211);
+
+  let viewSize = 5.8;
+  let azimuth = Math.PI * 0.25;
+  let polar = 0.52;
+  const target = new THREE.Vector3(0, 0, 0);
+  const aspect0 = window.innerWidth / window.innerHeight;
+  const camera = new THREE.OrthographicCamera(-viewSize * aspect0, viewSize * aspect0, viewSize, -viewSize, 0.1, 200);
+  const perspCamera = new THREE.PerspectiveCamera(48, aspect0, 0.1, 200);
+  let usePerspective = false;
+
+  function updateCamera() {
+    const r = 12;
+    const cx = target.x + r * Math.sin(polar) * Math.cos(azimuth);
+    const cy = target.y + r * Math.cos(polar);
+    const cz = target.z + r * Math.sin(polar) * Math.sin(azimuth);
+    camera.position.set(cx, cy, cz);
+    camera.lookAt(target);
+    perspCamera.position.set(cx, cy, cz);
+    perspCamera.lookAt(target);
+  }
+
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x5a4f3d, 0.38));
+  const sun = new THREE.DirectionalLight(0xffffff, 1.15);
+  sun.position.set(6, 10, 6);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(2048, 2048);
+  sun.shadow.camera.left = -8;
+  sun.shadow.camera.right = 8;
+  sun.shadow.camera.top = 8;
+  sun.shadow.camera.bottom = -8;
+  sun.shadow.camera.near = 0.5;
+  sun.shadow.camera.far = 28;
+  scene.add(sun);
+
+  const M = {
+    grass: new THREE.MeshLambertMaterial({ color: 0x8fbf4d }),
+    dirt: new THREE.MeshLambertMaterial({ color: 0x5b351d }),
+    tile: new THREE.MeshLambertMaterial({ color: 0xf0eadb }),
+    tileSide: new THREE.MeshLambertMaterial({ color: 0xcdbf9d }),
+    hover: new THREE.MeshBasicMaterial({ color: 0xe4b84e, transparent: true, opacity: 0.28, depthWrite: false }),
+    hoverBad: new THREE.MeshBasicMaterial({ color: 0xdc7565, transparent: true, opacity: 0.32, depthWrite: false }),
+    boardLine: new THREE.MeshBasicMaterial({ color: 0x1c211d, transparent: true, opacity: 0.16 })
+  };
+
+  function roundedSlab(size, height, radius = 0.07) {
+    const w = size / 2;
+    const r = Math.min(radius, w - 0.01);
+    const shape = new THREE.Shape();
+    shape.moveTo(-w + r, -w);
+    shape.lineTo(w - r, -w);
+    shape.quadraticCurveTo(w, -w, w, -w + r);
+    shape.lineTo(w, w - r);
+    shape.quadraticCurveTo(w, w, w - r, w);
+    shape.lineTo(-w + r, w);
+    shape.quadraticCurveTo(-w, w, -w, w - r);
+    shape.lineTo(-w, -w + r);
+    shape.quadraticCurveTo(-w, -w, -w + r, -w);
+    const geo = new THREE.ExtrudeGeometry(shape, {
+      depth: height,
+      bevelEnabled: true,
+      bevelSegments: 2,
+      bevelSize: 0.035,
+      bevelThickness: 0.035,
+      curveSegments: 4
+    });
+    geo.rotateX(-Math.PI / 2);
+    return geo;
+  }
+
+  function roundedBox(width, height, depth, radius = 0.08) {
+    const shape = new THREE.Shape();
+    const hw = width / 2;
+    const hd = depth / 2;
+    const r = Math.min(radius, hw - 0.01, hd - 0.01);
+    shape.moveTo(-hw + r, -hd);
+    shape.lineTo(hw - r, -hd);
+    shape.quadraticCurveTo(hw, -hd, hw, -hd + r);
+    shape.lineTo(hw, hd - r);
+    shape.quadraticCurveTo(hw, hd, hw - r, hd);
+    shape.lineTo(-hw + r, hd);
+    shape.quadraticCurveTo(-hw, hd, -hw, hd - r);
+    shape.lineTo(-hw, -hd + r);
+    shape.quadraticCurveTo(-hw, -hd, -hw + r, -hd);
+    const geo = new THREE.ExtrudeGeometry(shape, {
+      depth: height,
+      bevelEnabled: true,
+      bevelSegments: 3,
+      bevelSize: 0.045,
+      bevelThickness: 0.045,
+      curveSegments: 6
+    });
+    geo.rotateX(-Math.PI / 2);
+    return geo;
+  }
+
+  function castReceive(obj) {
+    obj.traverse(child => {
+      if (child.isMesh) {
+        child.castShadow = true;
+        child.receiveShadow = true;
       }
-    }
+    });
+    return obj;
+  }
 
-    function renderWildcardPicker() {
-      els.wildPicker.innerHTML = "";
-      const selected = state.selectedDie === null ? null : state.roll[state.selectedDie];
-      const show = selected && selected.face === "*" && !selected.used && !state.locked;
-      els.wildPicker.classList.toggle("show", Boolean(show));
-      if (!show) return;
-      LETTERS.forEach(letter => {
-        const btn = document.createElement("button");
-        btn.className = "letter-pick";
-        btn.type = "button";
-        btn.textContent = letter;
-        btn.addEventListener("click", () => {
-          selected.assigned = letter;
-          render();
-        });
-        els.wildPicker.appendChild(btn);
-      });
-    }
+  const boardGroup = new THREE.Group();
+  const tileGroup = new THREE.Group();
+  const pieceGroup = new THREE.Group();
+  const rollStageGroup = new THREE.Group();
+  boardGroup.add(tileGroup, pieceGroup, rollStageGroup);
+  scene.add(boardGroup);
 
-    function renderValidation() {
-      const validation = state.lastValidation;
-      els.wordList.innerHTML = "";
-      els.breakdown.innerHTML = "";
+  function tilePos(c, r) {
+    return new THREE.Vector3(c - BOARD_SIZE / 2 + 0.5, 0, r - BOARD_SIZE / 2 + 0.5);
+  }
 
-      if (!validation || validation.words.length === 0) {
-        els.wordList.innerHTML = `<div class="word"><b>No words yet</b><span>Build runs of 3 or more.</span></div>`;
-      } else {
-        validation.words.forEach(word => {
-          const row = document.createElement("div");
-          row.className = `word${word.valid ? "" : " bad"}`;
-          row.innerHTML = `<b>${word.text}</b><span>${word.valid ? "valid" : "unknown"}</span>`;
-          els.wordList.appendChild(row);
-        });
-      }
+  function makeBoardTile(c, r) {
+    const group = new THREE.Group();
+    const dirt = new THREE.Mesh(roundedSlab(0.98, DIRT_H, 0.06), M.dirt);
+    dirt.position.y = -DIRT_H;
+    group.add(dirt);
+    const top = new THREE.Mesh(roundedSlab(0.98, TOP_H, 0.06), M.grass);
+    group.add(top);
+    const inset = new THREE.Mesh(roundedSlab(0.78, 0.025, 0.04), M.boardLine);
+    inset.position.y = TOP_H + 0.012;
+    group.add(inset);
+    group.position.copy(tilePos(c, r));
+    group.userData = { gx: c, gz: r, kind: "board-tile" };
+    return castReceive(group);
+  }
 
-      if (validation?.fragments.length) {
-        validation.fragments.forEach(fragment => {
-          const row = document.createElement("div");
-          row.className = "word bad";
-          row.innerHTML = `<b>${fragment.text}</b><span>2-letter fragment</span>`;
-          els.wordList.appendChild(row);
-        });
-      }
-
-      const score = state.lastScore || scoreBoard(validation);
-      addBreakdown("Word points", score.wordPoints);
-      addBreakdown("Intersections", score.intersectionPoints);
-      addBreakdown("Rare letters", score.rarePoints);
-      addBreakdown("Upgrade bonuses", score.upgradePoints);
-      addBreakdown("Round total", score.total, true);
-    }
-
-    function addBreakdown(label, value, strong = false) {
-      const row = document.createElement("div");
-      row.className = "row";
-      row.innerHTML = `<span>${label}</span><${strong ? "strong" : "span"}>${value}</${strong ? "strong" : "span"}>`;
-      els.breakdown.appendChild(row);
-    }
-
-    function selectDie(index) {
-      if (state.locked || state.roll[index].used) return;
-      state.selectedDie = state.selectedDie === index ? null : index;
-      render();
-    }
-
-    function onCellClick(r, c) {
-      if (state.locked) return;
-      const current = state.board[r][c];
-      if (current) {
-        state.roll[current.rollIndex].used = false;
-        state.board[r][c] = null;
-        state.selectedDie = current.rollIndex;
-        validateAndMaybeComplete();
-        return;
-      }
-      if (state.selectedDie === null) {
-        setStatus("Select a die", "Pick a rolled die before placing on the board.", "ready");
-        return;
-      }
-      const die = state.roll[state.selectedDie];
-      if (die.face === "*" && !die.assigned) {
-        setStatus("Choose a wildcard letter", "Pick a letter from the gold wildcard tray first.", "ready");
-        return;
-      }
-      state.board[r][c] = { ...die, rollIndex: state.selectedDie };
-      die.used = true;
-      state.selectedDie = null;
-      validateAndMaybeComplete();
-    }
-
-    function validateAndMaybeComplete() {
-      const validation = validateBoard();
-      state.lastValidation = validation;
-      state.lastScore = scoreBoard(validation);
-      updateStatus(validation);
-      render();
-      if (validation.complete && !state.locked) {
-        completeRound();
-      }
-    }
-
-    function validateBoard() {
-      const placed = [];
-      for (let r = 0; r < BOARD_SIZE; r++) {
-        for (let c = 0; c < BOARD_SIZE; c++) {
-          if (state.board[r][c]) placed.push({ r, c });
-        }
-      }
-
-      const words = extractWords();
-      const fragments = words.filter(w => w.text.length === 2);
-      const realWords = words.filter(w => w.text.length >= 3).map(w => ({
-        ...w,
-        valid: WORDS.has(w.text)
-      }));
-      const invalidWords = realWords.filter(w => !w.valid);
-      const unused = state.roll.filter(d => !d.used).length;
-      const connected = placed.length > 0 && isConnected(placed);
-      const unassignedWild = placed.some(({ r, c }) => state.board[r][c].face === "*" && !state.board[r][c].assigned);
-      const invalidCells = [
-        ...fragments.flatMap(w => w.cells),
-        ...invalidWords.flatMap(w => w.cells)
-      ];
-
-      return {
-        placed,
-        words: realWords,
-        fragments,
-        invalidWords,
-        invalidCells,
-        unused,
-        connected,
-        unassignedWild,
-        complete: unused === 0 && connected && placed.length === state.roll.length && !unassignedWild && fragments.length === 0 && invalidWords.length === 0 && realWords.length > 0
-      };
-    }
-
-    function extractWords() {
-      const words = [];
-      for (let r = 0; r < BOARD_SIZE; r++) {
-        let current = [];
-        for (let c = 0; c <= BOARD_SIZE; c++) {
-          const cell = c < BOARD_SIZE ? state.board[r][c] : null;
-          if (cell) current.push({ r, c, letter: cell.assigned || "" });
-          if ((!cell || c === BOARD_SIZE) && current.length) {
-            if (current.length >= 2) {
-              words.push({
-                text: current.map(x => x.letter).join(""),
-                cells: current.map(({ r, c }) => ({ r, c })),
-                axis: "row"
-              });
-            }
-            current = [];
-          }
-        }
-      }
+  function buildBoard() {
+    tileGroup.clear();
+    for (let r = 0; r < BOARD_SIZE; r++) {
       for (let c = 0; c < BOARD_SIZE; c++) {
-        let current = [];
-        for (let r = 0; r <= BOARD_SIZE; r++) {
-          const cell = r < BOARD_SIZE ? state.board[r][c] : null;
-          if (cell) current.push({ r, c, letter: cell.assigned || "" });
-          if ((!cell || r === BOARD_SIZE) && current.length) {
-            if (current.length >= 2) {
-              words.push({
-                text: current.map(x => x.letter).join(""),
-                cells: current.map(({ r, c }) => ({ r, c })),
-                axis: "col"
-              });
-            }
-            current = [];
-          }
-        }
+        tileGroup.add(makeBoardTile(c, r));
       }
-      return words;
     }
+  }
 
-    function isConnected(placed) {
-      const placedSet = new Set(placed.map(posKey));
-      const seen = new Set();
-      const queue = [placed[0]];
-      seen.add(posKey(placed[0]));
-      while (queue.length) {
-        const pos = queue.shift();
-        neighbors(pos.r, pos.c).forEach(next => {
-          const key = posKey(next);
-          if (placedSet.has(key) && !seen.has(key)) {
-            seen.add(key);
-            queue.push(next);
-          }
-        });
+  const hoverMesh = new THREE.Mesh(roundedSlab(1.02, 0.035, 0.07), M.hover);
+  hoverMesh.position.y = TOP_H + 0.035;
+  hoverMesh.visible = false;
+  scene.add(hoverMesh);
+
+  const dropAnims = [];
+  const easeOutBack = (t, c1 = 1.70158) => {
+    const c3 = c1 + 1;
+    return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+  };
+
+  // Pre-allocated scratch objects for tickRollStage — avoids per-frame GC pressure
+  const _qA = new THREE.Quaternion();
+  const _qB = new THREE.Quaternion();
+  const _qC = new THREE.Quaternion();
+  const _v3 = new THREE.Vector3();
+  const _vW = new THREE.Vector3();
+  const _vY = new THREE.Vector3(0, 1, 0);
+
+  function animateDrop(obj, distance = 1.4, dur = 0.42) {
+    const baseY = obj.position.y;
+    obj.position.y = baseY + distance;
+    dropAnims.push({ obj, baseY, distance, dur, t: 0 });
+  }
+
+  function tickDropAnims(dt) {
+    for (let i = dropAnims.length - 1; i >= 0; i--) {
+      const anim = dropAnims[i];
+      anim.t += dt;
+      const u = Math.min(1, anim.t / anim.dur);
+      anim.obj.position.y = anim.baseY + anim.distance * (1 - easeOutBack(u));
+      if (u >= 1) {
+        anim.obj.position.y = anim.baseY;
+        dropAnims.splice(i, 1);
       }
-      return seen.size === placed.length;
+    }
+  }
+
+  const raycaster = new THREE.Raycaster();
+  const ndc = new THREE.Vector2();
+
+  function pickTile(clientX, clientY) {
+    ndc.x = (clientX / window.innerWidth) * 2 - 1;
+    ndc.y = -(clientY / window.innerHeight) * 2 + 1;
+    raycaster.setFromCamera(ndc, usePerspective ? perspCamera : camera);
+    const hits = raycaster.intersectObjects(tileGroup.children, true);
+    for (const hit of hits) {
+      let n = hit.object;
+      while (n && n.userData.gx === undefined) n = n.parent;
+      if (n && n.userData.gx !== undefined) return { c: n.userData.gx, r: n.userData.gz };
+    }
+    return null;
+  }
+
+  function pickPlacedPiece(clientX, clientY) {
+    ndc.x = (clientX / window.innerWidth) * 2 - 1;
+    ndc.y = -(clientY / window.innerHeight) * 2 + 1;
+    raycaster.setFromCamera(ndc, usePerspective ? perspCamera : camera);
+    const hits = raycaster.intersectObjects(pieceGroup.children, true);
+    for (const hit of hits) {
+      let n = hit.object;
+      while (n && n.userData.rollIndex === undefined) n = n.parent;
+      if (n && n.userData.rollIndex !== undefined) return n.userData;
+    }
+    return null;
+  }
+
+  function makeDieFaceTexture(letter, isWild, role = "side") {
+    const canvas = document.createElement("canvas");
+    canvas.width = 256;
+    canvas.height = 256;
+    const ctx = canvas.getContext("2d");
+    const isTop = role === "top";
+    const isBottom = role === "bottom";
+    const bg = isWild ? "#f0c84e" : "#f5f1e8";
+    const inner = isWild ? "#ffdc73" : "#fffdf7";
+    const ink = isTop
+      ? (isWild ? "#5d4200" : "#111510")
+      : (isWild ? "rgba(93,66,0,0.52)" : "rgba(17,21,16,0.46)");
+    const mutedInk = isWild ? "rgba(93,66,0,0.3)" : "rgba(17,21,16,0.24)";
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = inner;
+    roundRect(ctx, 18, 18, 220, 220, 30);
+    ctx.fill();
+    ctx.strokeStyle = isWild ? "rgba(93,66,0,0.34)" : "rgba(17,21,16,0.18)";
+    ctx.lineWidth = isTop ? 13 : 10;
+    ctx.stroke();
+
+    ctx.fillStyle = mutedInk;
+    const pipRadius = isTop ? 10 : 8;
+    drawPip2d(ctx, 46, 46, pipRadius);
+    drawPip2d(ctx, 210, 46, pipRadius);
+    drawPip2d(ctx, 46, 210, pipRadius);
+    drawPip2d(ctx, 210, 210, pipRadius);
+
+    if (!isBottom) {
+      ctx.fillStyle = ink;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.shadowColor = isTop
+        ? (isWild ? "rgba(255,248,205,0.55)" : "rgba(255,255,255,0.75)")
+        : "rgba(255,255,255,0.28)";
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetY = isTop ? 3 : 1;
+      ctx.font = isTop ? "900 154px Inter, Arial, sans-serif" : "850 112px Inter, Arial, sans-serif";
+      ctx.fillText(letter || "*", 128, isTop ? 132 : 128);
+    } else {
+      ctx.fillStyle = mutedInk;
+      ctx.font = "800 34px Inter, Arial, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("LEXICON", 128, 132);
     }
 
-    function neighbors(r, c) {
-      return [
-        { r: r - 1, c }, { r: r + 1, c }, { r, c: c - 1 }, { r, c: c + 1 }
-      ].filter(p => p.r >= 0 && p.r < BOARD_SIZE && p.c >= 0 && p.c < BOARD_SIZE);
-    }
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.anisotropy = 4;
+    texture.needsUpdate = true;
+    return texture;
+  }
 
-    function findIntersections() {
-      const words = extractWords().filter(w => w.text.length >= 3);
-      const counts = new Map();
-      words.forEach(word => {
-        word.cells.forEach(cell => {
-          const key = posKey(cell);
-          counts.set(key, (counts.get(key) || 0) + 1);
-        });
-      });
-      return new Set([...counts.entries()].filter(([, count]) => count > 1).map(([key]) => key));
-    }
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
 
-    function scoreBoard(validation) {
-      if (!validation) {
-        return { wordPoints: 0, intersectionPoints: 0, rarePoints: 0, upgradePoints: 0, total: 0 };
-      }
-      const validWords = validation.words.filter(w => w.valid);
-      const wordPoints = validWords.reduce((sum, word) => sum + word.text.length * word.text.length, 0);
-      const intersections = findIntersections().size;
-      const intersectionPoints = intersections * (3 + state.upgrades.intersectionBonus);
-      let rareCount = 0;
-      let consonants = 0;
-      validation.placed.forEach(({ r, c }) => {
-        const letter = state.board[r][c].assigned;
-        if (RARE.has(letter)) rareCount++;
-        if (!"AEIOU".includes(letter)) consonants++;
-      });
-      const rarePoints = rareCount * (4 + state.upgrades.rareBonus);
-      const fiveBonus = validWords.filter(w => w.text.length === 5).length * state.upgrades.fiveBonus;
-      const consonantBonus = consonants * state.upgrades.consonantBonus;
-      const upgradePoints = fiveBonus + consonantBonus;
+  function drawPip2d(ctx, x, y, r) {
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  function visualDieFaces(cell) {
+    const topLetter = cell.assigned || cell.letter || "*";
+    const faces = (cell.dieFaces || []).filter(face => face && face !== "*");
+    const rotated = [topLetter, ...faces.filter(face => face !== topLetter), ...faces];
+    return {
+      top: topLetter,
+      front: rotated[1] || topLetter,
+      right: rotated[2] || topLetter,
+      left: rotated[3] || topLetter,
+      back: rotated[4] || topLetter
+    };
+  }
+
+  function makeDieFaceMaterial(letter, isWild, role) {
+    const texture = makeDieFaceTexture(letter, isWild, role);
+    return new THREE.MeshLambertMaterial({
+      map: texture,
+      color: isWild ? 0xffdf70 : 0xffffff
+    });
+  }
+
+  function makeLetterDie(cell, uniformFaces = false) {
+    const isWild = cell.face === "*";
+    const visible = visualDieFaces(cell);
+    const group = new THREE.Group();
+    const die = new THREE.Mesh(
+      new THREE.BoxGeometry(0.82, 0.82, 0.82),
+      [
+        makeDieFaceMaterial(visible.right, isWild, uniformFaces ? "top" : "side"),
+        makeDieFaceMaterial(visible.left, isWild, uniformFaces ? "top" : "side"),
+        makeDieFaceMaterial(visible.top, isWild, "top"),
+        makeDieFaceMaterial("", isWild, "bottom"),
+        makeDieFaceMaterial(visible.front, isWild, uniformFaces ? "top" : "side"),
+        makeDieFaceMaterial(visible.back, isWild, uniformFaces ? "top" : "side")
+      ]
+    );
+    die.position.y = 0.41;
+    group.add(die);
+
+    castReceive(group);
+    return group;
+  }
+
+  const baseDice = STARTING_DICE_FACES.map((faces, i) => ({
+    id: i + 1,
+    faces: [...faces],
+    wild: false,
+    upgrades: []
+  }));
+
+  let state = {};
+  let drag = null;
+  let pointerDown = null;
+  let didOrbitDrag = false;
+  let lastPointer = null;
+  let currentHover = null;
+  let rollAnimationSerial = 0;
+  const DRAG_THRESHOLD = 5;
+  const ROLL_ANIMATION_MS = 2000;
+
+  function cloneDice() {
+    return baseDice.map(die => ({ id: die.id, faces: [...die.faces], wild: die.wild, upgrades: [...die.upgrades] }));
+  }
+
+  function emptyBoard() {
+    return Array.from({ length: BOARD_SIZE }, () => Array.from({ length: BOARD_SIZE }, () => null));
+  }
+
+  function newRun() {
+    state = {
+      round: 1,
+      score: 0,
+      target: 24,
+      rerollsBase: 1,
+      rerolls: 1,
+      nextDieId: baseDice.length + 1,
+      dice: cloneDice(),
+      roll: [],
+      board: emptyBoard(),
+      locked: false,
+      isRolling: false,
+      rollAnimationId: 0,
+      rollStartedAt: 0,
+      traySettlingUntil: 0,
+      selectedWildIndex: null,
+      upgrades: {
+        intersectionBonus: 0,
+        fiveBonus: 0,
+        rareBonus: 0,
+        consonantBonus: 0
+      },
+      lastValidation: null,
+      lastScore: null,
+      stuckDice: []
+    };
+    startRound();
+  }
+
+  function startRound() {
+    state.board = emptyBoard();
+    state.locked = false;
+    state.isRolling = false;
+    state.selectedWildIndex = null;
+    state.rerolls = state.rerollsBase;
+    state.roll = rollDice();
+    state.lastValidation = null;
+    state.lastScore = null;
+    els.modal.classList.remove("show");
+    beginRollAnimation();
+  }
+
+  function rollDice() {
+    return state.dice.map(die => {
+      const letter = die.faces[Math.floor(Math.random() * die.faces.length)];
       return {
-        wordPoints,
-        intersectionPoints,
-        rarePoints,
-        upgradePoints,
-        total: wordPoints + intersectionPoints + rarePoints + upgradePoints
+        id: `${state.round}-${die.id}-${Math.random().toString(36).slice(2)}`,
+        dieId: die.id,
+        face: letter,
+        letter,
+        assigned: letter === "*" ? "" : letter,
+        used: false
       };
-    }
+    });
+  }
 
-    function updateStatus(validation) {
-      if (state.locked) return;
-      if (validation.complete) {
-        setStatus("Valid board", "The crossword locks automatically. Choose an upgrade.", "good");
-        return;
-      }
-      if (validation.unused > 0) {
-        setStatus(`${validation.unused} dice left`, "Same dice, new faces. Use every rolled die.", "ready");
-        return;
-      }
-      if (!validation.connected) {
-        setStatus("Disconnected", "All placed dice must touch the same crossword.", "bad");
-        return;
-      }
-      if (validation.fragments.length) {
-        setStatus("Fragment found", "Two-letter runs are not words. Break or extend them.", "bad");
-        return;
-      }
-      if (validation.invalidWords.length) {
-        setStatus("Unknown word", `${validation.invalidWords[0].text} is not in this prototype dictionary.`, "bad");
-        return;
-      }
-      setStatus("Almost", "The structure is close. Keep shaping the board.", "ready");
-    }
+  function renderAll(options = {}) {
+    const { pieces = true } = options;
+    els.round.textContent = state.round;
+    els.score.textContent = state.score;
+    els.target.textContent = state.target;
+    els.reroll.textContent = `Reroll ${state.rerolls}`;
+    els.reroll.disabled = state.isRolling || state.rerolls <= 0 || state.locked;
+    els.clear.disabled = state.isRolling || state.locked;
+    els.newRun.disabled = state.isRolling;
+    renderDiceTray();
+    renderWildcardPicker();
+    if (pieces) renderPieces();
+    renderValidation();
+    if (state.isRolling) setStatus("Rolling dice", "Your letters are landing in the tray.", "ready");
+  }
 
-    function setStatus(title, body, tone) {
-      els.status.className = `status ${tone || ""}`;
-      els.status.innerHTML = `<strong>${title}</strong><span>${body}</span>`;
-    }
-
-    function completeRound() {
-      state.locked = true;
-      const gained = state.lastScore.total;
-      state.score += gained;
-      const passed = gained >= state.target;
-      els.upgradeSummary.textContent = passed
-        ? `Round score ${gained}. Pick one upgrade before round ${state.round + 1}.`
-        : `Round score ${gained}, below target ${state.target}. The run survives for now, but the target keeps climbing.`;
-      render();
-      setTimeout(() => showUpgrades(), 450);
-    }
-
-    function showUpgrades() {
-      els.upgradeGrid.innerHTML = "";
-      getUpgradeChoices().forEach(upgrade => {
-        const btn = document.createElement("button");
-        btn.className = "upgrade";
-        btn.type = "button";
-        btn.innerHTML = `<span>${upgrade.family}</span><strong>${upgrade.name}</strong><em>${upgrade.desc}</em>`;
-        btn.addEventListener("click", () => {
-          upgrade.apply();
-          state.round += 1;
-          state.target += 6 + Math.floor(state.round * 2.2);
-          startRound();
-        });
-        els.upgradeGrid.appendChild(btn);
-      });
-      els.modal.classList.add("show");
-    }
-
-    function getUpgradeChoices() {
-      const wildTarget = randomDie();
-      const vowelTarget = randomDie();
-      const rolledTarget = randomFrom(state.roll);
-      const duplicateTarget = state.dice.find(d => d.id === rolledTarget.dieId);
-      const candidates = [
-        {
-          family: "Dice Mutation",
-          name: `Wildcard Side: D${wildTarget.id}`,
-          desc: `D${wildTarget.id} can now roll a wildcard face.`,
-          apply: () => {
-            wildTarget.wild = true;
-            if (!wildTarget.faces.includes("*")) wildTarget.faces.push("*");
-            wildTarget.upgrades.push("wild");
-          }
-        },
-        {
-          family: "Dice Mutation",
-          name: `Extra Vowel: D${vowelTarget.id}`,
-          desc: `Add a useful vowel face to D${vowelTarget.id}.`,
-          apply: () => {
-            vowelTarget.faces.push(randomFrom(["A", "E", "I", "O"]));
-            vowelTarget.upgrades.push("vowel");
-          }
-        },
-        {
-          family: "Dice Mutation",
-          name: `Duplicate ${rolledTarget.assigned || rolledTarget.letter}: D${duplicateTarget.id}`,
-          desc: `Add another ${rolledTarget.assigned || rolledTarget.letter} face to D${duplicateTarget.id}.`,
-          apply: () => {
-            duplicateTarget.faces.push(rolledTarget.assigned || rolledTarget.letter);
-            duplicateTarget.upgrades.push("copy");
-          }
-        },
-        {
-          family: "Utility",
-          name: "Add Die",
-          desc: "Add one persistent die. Future rounds require one more letter.",
-          apply: () => {
-            const faces = ADD_DIE_FACES[(state.nextDieId - baseDice.length - 1) % ADD_DIE_FACES.length];
-            state.dice.push({
-              id: state.nextDieId,
-              faces: [...faces],
-              wild: false,
-              upgrades: ["new"]
-            });
-            state.nextDieId += 1;
-          }
-        },
-        {
-          family: "Utility",
-          name: "Extra Reroll",
-          desc: "Gain one more reroll every round.",
-          apply: () => { state.rerollsBase += 1; }
-        },
-        {
-          family: "Scoring Bias",
-          name: "Intersection Bonus",
-          desc: "Crossing letters score 2 extra points.",
-          apply: () => { state.upgrades.intersectionBonus += 2; }
-        },
-        {
-          family: "Scoring Bias",
-          name: "Five-Letter Prize",
-          desc: "Each 5-letter word scores 6 extra points.",
-          apply: () => { state.upgrades.fiveBonus += 6; }
-        },
-        {
-          family: "Scoring Bias",
-          name: "Rare Letter Drama",
-          desc: "Rare letters score 3 extra points.",
-          apply: () => { state.upgrades.rareBonus += 3; }
-        },
-        {
-          family: "Scoring Bias",
-          name: "Consonant Lean",
-          desc: "Every consonant scores 1 extra point.",
-          apply: () => { state.upgrades.consonantBonus += 1; }
+  function renderDiceTray() {
+    els.tray.innerHTML = "";
+    const traySettling = Date.now() < (state.traySettlingUntil || 0);
+    els.tray.classList.toggle("rolling", Boolean(state.isRolling));
+    els.tray.classList.toggle("settling", traySettling);
+    const trayRect = els.tray.getBoundingClientRect();
+    state.roll.forEach((die, index) => {
+      const source = state.dice.find(d => d.id === die.dieId);
+      const faceText = source ? source.faces.join(" ") : "";
+      const isMutated = source && (source.upgrades.length > 0 || source.faces.length > 6);
+      const layout = trayDieLayout(index, state.roll.length);
+      const cardCenterX = trayRect.left + trayRect.width * ((layout.left + layout.width / 2) / 100);
+      const cardCenterY = trayRect.top + trayRect.height * ((layout.top + layout.height / 2) / 100);
+      const flySource = rollFlySource(index, state.roll.length);
+      const btn = document.createElement("button");
+      btn.className = `die${die.face === "*" ? " wild" : ""}${source?.wild ? " has-wild" : ""}${isMutated ? " mutated" : ""}${die.used ? " used" : ""}${drag?.rollIndex === index ? " dragging" : ""}${state.stuckDice?.includes(index) ? " stuck" : ""}`;
+      btn.type = "button";
+      btn.disabled = state.isRolling || die.used || state.locked;
+      btn.title = `D${die.dieId}: ${faceText}`;
+      btn.style.left = `${layout.left}%`;
+      btn.style.top = `${layout.top}%`;
+      btn.style.width = `${layout.width}%`;
+      btn.style.height = `${layout.height}%`;
+      btn.style.transitionDelay = state.isRolling ? "0ms" : `${80 + index * 28}ms`;
+      btn.style.setProperty("--fly-x", `${flySource.x - cardCenterX}px`);
+      btn.style.setProperty("--fly-y", `${flySource.y - cardCenterY}px`);
+      btn.style.setProperty("--fly-r", `${[-14, 11, -8, 15, 9, -12, 13, -10][index % 8]}deg`);
+      btn.style.setProperty("--settle-delay", `${index * 38}ms`);
+      btn.innerHTML = `
+        <span class="die-id">D${die.dieId}</span>
+        <span class="die-current">${die.face === "*" ? (die.assigned || "*") : die.letter}</span>
+        <span class="die-faces">${faceText}</span>
+      `;
+      btn.addEventListener("pointerdown", event => beginDieDrag(event, index));
+      btn.addEventListener("click", () => {
+        if (die.face === "*" && !die.used && !state.locked) {
+          state.selectedWildIndex = index;
+          renderWildcardPicker();
         }
-      ];
-      return shuffle(candidates).slice(0, 3);
-    }
-
-    function randomDie() {
-      return state.dice[Math.floor(Math.random() * state.dice.length)];
-    }
-
-    function randomFrom(items) {
-      return items[Math.floor(Math.random() * items.length)];
-    }
-
-    function shuffle(items) {
-      return [...items].sort(() => Math.random() - 0.5);
-    }
-
-    function posKey(pos) {
-      return `${pos.r},${pos.c}`;
-    }
-
-    function reroll() {
-      if (state.rerolls <= 0 || state.locked) return;
-      state.rerolls -= 1;
-      state.board = emptyBoard();
-      state.selectedDie = null;
-      state.roll = rollDice();
-      validateAndMaybeComplete();
-    }
-
-    function clearBoard() {
-      if (state.locked) return;
-      state.board = emptyBoard();
-      state.roll.forEach(d => { d.used = false; });
-      state.selectedDie = null;
-      validateAndMaybeComplete();
-    }
-
-    function seedSolve() {
-      if (state.locked) return;
-      clearBoard();
-      const map = SOLVE_MAPS[(state.round - 1) % SOLVE_MAPS.length];
-      map.slice(0, state.roll.length).forEach((slot, index) => {
-        const die = state.roll[index];
-        die.face = slot.l;
-        die.letter = slot.l;
-        die.assigned = slot.l;
-        state.board[slot.r][slot.c] = { ...die, rollIndex: index };
-        die.used = true;
       });
-      validateAndMaybeComplete();
+      els.tray.appendChild(btn);
+    });
+  }
+
+  function trayDieLayout(index, count) {
+    const cols = Math.ceil(count / 2);
+    const row = index >= cols ? 1 : 0;
+    const col = row ? index - cols : index;
+    const width = Math.min(22, 82 / cols);
+    const height = count > 4 ? 40 : 62;
+    const gap = (100 - width * cols) / (cols + 1);
+    const rowTop = count > 4 ? [7, 53] : [19];
+    const top = rowTop[row];
+    return {
+      left: gap + col * (width + gap),
+      top,
+      width,
+      height,
+      sceneX: -2.58 + col * (5.16 / Math.max(cols - 1, 1)),
+      sceneZ: row ? 0.98 : -0.88,
+      rotationY: [-0.22, 0.14, -0.08, 0.2, 0.1, -0.18, 0.16, -0.12][index % 8],
+      rotationZ: 0
+    };
+  }
+
+  function rollFlySource(index, count) {
+    const cols = Math.ceil(count / 2);
+    const row = index >= cols ? 1 : 0;
+    const col = row ? index - cols : index;
+    const span = Math.min(340, Math.max(110, (cols - 1) * 74));
+    const x = window.innerWidth * 0.5 + (cols === 1 ? 0 : -span / 2 + col * (span / (cols - 1)));
+    const y = window.innerHeight * 0.47 + (row ? 54 : -54);
+    return { x, y };
+  }
+
+  function makeTrayDieCell(die, source) {
+    return {
+      ...die,
+      assigned: die.face === "*" ? die.assigned || "*" : die.assigned,
+      dieFaces: source ? [...source.faces] : [die.assigned || die.letter || "*"]
+    };
+  }
+
+  function beginRollAnimation() {
+    state.stuckDice = [];
+    state.isRolling = true;
+    state.traySettlingUntil = 0;
+    state.rollAnimationId = ++rollAnimationSerial;
+    state.rollStartedAt = performance.now();
+    buildRollStage();
+    renderAll();
+    window.setTimeout(() => finishRollAnimation(state.rollAnimationId), ROLL_ANIMATION_MS);
+  }
+
+  function finishRollAnimation(animationId) {
+    if (!state.isRolling || animationId !== state.rollAnimationId) return;
+    state.isRolling = false;
+    state.traySettlingUntil = Date.now() + 820;
+    clearRollStage();
+    validateAndMaybeComplete();
+    window.setTimeout(() => {
+      if (animationId === state.rollAnimationId) renderDiceTray();
+    }, 860);
+  }
+
+  function clearRollStage() {
+    while (rollStageGroup.children.length) {
+      const child = rollStageGroup.children.pop();
+      disposeObject(child);
     }
+  }
 
-    els.reroll.addEventListener("click", reroll);
-    els.clear.addEventListener("click", clearBoard);
-    els.newRun.addEventListener("click", newRun);
-    els.hint.addEventListener("click", seedSolve);
+  function buildRollStage() {
+    clearRollStage();
+    state.roll.forEach((die, index) => {
+      const source = state.dice.find(d => d.id === die.dieId);
+      const piece = makeLetterDie(makeTrayDieCell(die, source), true);
+      // Center the die mesh at the group origin so it rotates around its own centre.
+      // makeLetterDie offsets the die to y=0.41 for board placement; here we reset it
+      // so the group position represents the die's centre, not its bottom face.
+      piece.children[0].position.y = 0;
+      const home = rollStagePosition(index, state.roll.length);
+      const lane = rollLane(index, state.roll.length, home);
+      const baseRotY = [-0.32, 0.26, -0.18, 0.36, 0.22, -0.28, 0.18, -0.2][index % 8];
+      piece.userData = {
+        homeX: home.x,
+        homeZ: home.z,
+        startX: lane.startX,
+        startZ: lane.startZ,
+        endX: lane.endX,
+        endZ: lane.endZ,
+        laneOffset: lane.laneOffset,
+        rollDistance: lane.rollDistance,
+        rollDirection: lane.rollDirection,
+        baseRotationY: baseRotY,
+        // Primary tumble axis: perpendicular to direction of travel so the die pitches
+        // forward like a rolling wheel — this is the key to a "rolling" vs "sliding" feel.
+        // For travel direction θ, the perpendicular rolling axis is (sin θ, 0, -cos θ).
+        tumbleX: Math.sin(lane.rollDirection),
+        tumbleZ: -Math.cos(lane.rollDirection),
+        // Secondary wobble axis: along the travel direction — adds side-to-side lean
+        wobbleX: Math.cos(lane.rollDirection),
+        wobbleZ: Math.sin(lane.rollDirection),
+        // Two clean rotations — spinCount=2 → 4π → exact identity at t=1 (cleanest math)
+        spinCount: 2,
+        // Stagger: each die starts 40ms after previous
+        dropDelay: index * 0.040,
+        // Target quaternion — face-up with per-die yaw
+        targetQ: new THREE.Quaternion().setFromEuler(new THREE.Euler(0, baseRotY, 0)),
+        // Persistent collision offset — accumulated each frame so push-apart
+        // doesn't fight the lerp (die stays where it was pushed, no oscillation)
+        collOffsetX: 0,
+        collOffsetZ: 0
+      };
+      piece.scale.setScalar(0.96);
+      // Start position: group Y = die CENTRE height (since die is now centred at origin).
+      // seatedY in tickRollStage is TOP_H + 0.41 (centre of die when resting on board).
+      piece.position.set(piece.userData.startX, TOP_H + 0.41 + 0.55, piece.userData.startZ);
+      rollStageGroup.add(piece);
+    });
+    tickRollStage(performance.now());
+  }
 
-    newRun();
+  function rollStagePosition(index, count) {
+    const cols = Math.ceil(count / 2);
+    const row = index >= cols ? 1 : 0;
+    const col = row ? index - cols : index;
+    const span = Math.min(6.4, Math.max(1.6, (cols - 1) * 1.8));
+    const x = cols === 1 ? 0 : -span / 2 + col * (span / (cols - 1));
+    return { x, z: row ? 1.4 : -1.4 };
+  }
+
+  function rollLane(index, count, home) {
+    const row = index >= Math.ceil(count / 2) ? 1 : 0;
+    const laneOffset = (row ? 0.32 : -0.32) + ((index % 2) ? 0.08 : -0.08);
+    const startX = -3.2 - index * 0.48;
+    const startZ = home.z + laneOffset;
+    const endX = home.x;
+    const endZ = home.z;
+    const rollDistance = Math.hypot(endX - startX, endZ - startZ);
+    const rollDirection = Math.atan2(endZ - startZ, endX - startX);
+    return { startX, startZ, endX, endZ, laneOffset, rollDistance, rollDirection };
+  }
+
+  function tickRollStage(now) {
+    if (!state.isRolling) return;
+    // seatedY is the die GROUP centre height when resting on the board.
+    // Die mesh is centred at group origin, half-height = 0.41, board top = TOP_H.
+    const seatedY = TOP_H + 0.41;
+
+    rollStageGroup.children.forEach((piece, index) => {
+      const ud = piece.userData;
+
+      // Per-die staggered local time
+      const localElapsed = Math.max(0, (now - state.rollStartedAt) / 1000 - ud.dropDelay);
+      const localDuration = ROLL_ANIMATION_MS / 1000 - ud.dropDelay;
+      const t = Math.min(localElapsed / localDuration, 1);
+
+      // Ease power 2.5: visible deceleration across the whole travel arc.
+      // At t=0.3 (entering view) ~41% rotation done; decelerates clearly to a stop.
+      const tEased = 1 - Math.pow(1 - t, 2.5);
+
+      // XZ position — lerp gives natural trajectory, collOffset persists collision displacement
+      const x = ud.startX + (ud.endX - ud.startX) * tEased + ud.collOffsetX;
+      const laneCurve = Math.sin(tEased * Math.PI) * ud.laneOffset * 0.24;
+      const z = ud.startZ + (ud.endZ - ud.startZ) * tEased + laneCurve + ud.collOffsetZ;
+
+      // Y: die centre falls from seatedY+0.55 to seatedY with a gentle arc bump
+      const fallY = Math.pow(1 - t, 1.5) * 0.55;
+      const arcY = seatedY + fallY + Math.sin(tEased * Math.PI) * 0.08;
+
+      // ROTATION — two full rotations (spinCount=2 → 4π), guaranteed face-up at t=1.
+      // setFromAxisAngle(axis, 4π) = exact identity → identity × targetQ = targetQ.
+      const primaryAngle = ud.spinCount * Math.PI * 2 * tEased;
+
+      // Wobble: small side-lean along travel direction, fades to 0 at t=1
+      const wobbleEnvelope = Math.sin(t * Math.PI) * Math.pow(1 - t, 0.8);
+      const wobbleAngle = wobbleEnvelope * 0.22;
+
+      _v3.set(ud.tumbleX, 0, ud.tumbleZ);
+      _qA.setFromAxisAngle(_v3, primaryAngle);
+      _vW.set(ud.wobbleX, 0, ud.wobbleZ);
+      _qB.setFromAxisAngle(_vW, wobbleAngle);
+      _qA.premultiply(_qB);
+      piece.quaternion.copy(_qA).multiply(ud.targetQ);
+
+      piece.scale.setScalar(0.96);
+      piece.position.set(x, arcY, z);
+    });
+
+    // Push-apart: only runs once dice are 60%+ of the way to their destinations.
+    // Early-flight dice are naturally spreading apart; running collision then just
+    // accumulates wrong offsets that cause the landing-zone pile-up.
+    const globalT = Math.min((now - state.rollStartedAt) / ROLL_ANIMATION_MS, 1);
+    const N = rollStageGroup.children.length;
+    if (N > 1 && globalT > 0.6) {
+      const pos = rollStageGroup.children.map(p => ({
+        x: p.position.x, z: p.position.z,
+        ox: p.position.x, oz: p.position.z,
+        p
+      }));
+      const MIN = 0.94;
+      for (let iter = 0; iter < 6; iter++) {
+        for (let i = 0; i < N; i++) {
+          for (let j = i + 1; j < N; j++) {
+            const dx = pos[j].x - pos[i].x;
+            const dz = pos[j].z - pos[i].z;
+            const d2 = dx * dx + dz * dz;
+            if (d2 < MIN * MIN && d2 > 1e-6) {
+              const d = Math.sqrt(d2);
+              const push = (MIN - d) * 0.5;
+              const nx = dx / d, nz = dz / d;
+              pos[i].x -= nx * push; pos[i].z -= nz * push;
+              pos[j].x += nx * push; pos[j].z += nz * push;
+            }
+          }
+        }
+      }
+      pos.forEach(({ x, z, ox, oz, p }) => {
+        p.userData.collOffsetX += x - ox;
+        p.userData.collOffsetZ += z - oz;
+        p.position.x = x;
+        p.position.z = z;
+      });
+    }
+  }
+
+  function renderWildcardPicker() {
+    els.wildPicker.innerHTML = "";
+    const selected = state.selectedWildIndex === null ? null : state.roll[state.selectedWildIndex];
+    const show = selected && selected.face === "*" && !selected.used && !state.locked && !state.isRolling;
+    els.wildPicker.classList.toggle("show", Boolean(show));
+    if (!show) return;
+    LETTERS.forEach(letter => {
+      const btn = document.createElement("button");
+      btn.className = "letter-pick";
+      btn.type = "button";
+      btn.textContent = letter;
+      btn.addEventListener("click", () => {
+        selected.assigned = letter;
+        renderAll();
+      });
+      els.wildPicker.appendChild(btn);
+    });
+  }
+
+  function renderPieces() {
+    while (pieceGroup.children.length) {
+      const child = pieceGroup.children.pop();
+      disposeObject(child);
+    }
+    for (let r = 0; r < BOARD_SIZE; r++) {
+      for (let c = 0; c < BOARD_SIZE; c++) {
+        const cell = state.board[r][c];
+        if (!cell) continue;
+        const piece = makeLetterDie(cell);
+        const p = tilePos(c, r);
+        piece.position.set(p.x, TOP_H + 0.03, p.z);
+        piece.userData = { rollIndex: cell.rollIndex, r, c };
+        pieceGroup.add(piece);
+      }
+    }
+  }
+
+  function disposeObject(obj) {
+    obj.traverse(child => {
+      if (child.geometry) child.geometry.dispose();
+      if (child.material) {
+        const materials = Array.isArray(child.material) ? child.material : [child.material];
+        materials.forEach(material => {
+          if (material.map) material.map.dispose();
+          material.dispose();
+        });
+      }
+    });
+  }
+
+  function beginDieDrag(event, index) {
+    if (state.isRolling || state.locked || state.roll[index].used) return;
+    const die = state.roll[index];
+    if (die.face === "*" && !die.assigned) {
+      state.selectedWildIndex = index;
+      renderWildcardPicker();
+      setStatus("Choose a wildcard letter", "Pick a letter before dragging this wildcard die.", "ready");
+      return;
+    }
+    event.preventDefault();
+    drag = { type: "tray", rollIndex: index };
+    renderer.domElement.classList.add("placing");
+    els.ghost.textContent = die.face === "*" ? die.assigned || "*" : die.letter;
+    els.ghost.classList.add("show");
+    moveGhost(event.clientX, event.clientY);
+    renderDiceTray();
+  }
+
+  function beginBoardDieDrag(event, placed) {
+    if (state.isRolling || state.locked) return;
+    const cell = state.board[placed.r][placed.c];
+    if (!cell) return;
+    event.preventDefault();
+    drag = {
+      type: "board",
+      rollIndex: cell.rollIndex,
+      fromR: placed.r,
+      fromC: placed.c,
+      cell
+    };
+    state.board[placed.r][placed.c] = null;
+    renderer.domElement.classList.add("placing");
+    els.ghost.textContent = cell.face === "*" ? cell.assigned || "*" : cell.assigned || cell.letter;
+    els.ghost.classList.add("show");
+    moveGhost(event.clientX, event.clientY);
+    renderPieces();
+    updateHover(event.clientX, event.clientY);
+  }
+
+  function moveGhost(x, y) {
+    els.ghost.style.transform = `translate(${x + 14}px, ${y + 14}px)`;
+  }
+
+  window.addEventListener("pointermove", event => {
+    if (!drag) return;
+    moveGhost(event.clientX, event.clientY);
+    updateHover(event.clientX, event.clientY);
+  });
+
+  window.addEventListener("pointerup", event => {
+    if (!drag) return;
+    const cell = pickTile(event.clientX, event.clientY);
+    const activeDrag = drag;
+    endDrag();
+    if (activeDrag.type === "board") {
+      finishBoardDieDrag(activeDrag, cell);
+    } else {
+      if (!cell) {
+        setStatus("Drop cancelled", "Release over an empty board tile to place a die.", "ready");
+        return;
+      }
+      placeDie(activeDrag.rollIndex, cell.r, cell.c);
+    }
+  });
+
+  function endDrag() {
+    drag = null;
+    hoverMesh.visible = false;
+    currentHover = null;
+    renderer.domElement.classList.remove("placing");
+    els.ghost.classList.remove("show");
+    renderDiceTray();
+  }
+
+  function placeDie(rollIndex, r, c) {
+    if (state.locked) return;
+    if (state.board[r][c]) {
+      setStatus("Tile occupied", "Use an empty 3D tile or drop a moved die off the board to return it.", "bad");
+      validateAndMaybeComplete();
+      return;
+    }
+    const die = state.roll[rollIndex];
+    if (!die || die.used) return;
+    const source = state.dice.find(d => d.id === die.dieId);
+    state.board[r][c] = { ...die, rollIndex, dieFaces: source ? [...source.faces] : [die.assigned || die.letter] };
+    die.used = true;
+    renderPieces();
+    const placed = pieceGroup.children.find(piece => piece.userData.r === r && piece.userData.c === c);
+    if (placed) animateDrop(placed);
+    validateAndMaybeComplete({ pieces: false });
+  }
+
+  function finishBoardDieDrag(activeDrag, cell) {
+    if (state.locked) return;
+    const { rollIndex, fromR, fromC, cell: movedCell } = activeDrag;
+    if (!cell) {
+      state.roll[rollIndex].used = false;
+      validateAndMaybeComplete();
+      return;
+    }
+    if (state.board[cell.r][cell.c]) {
+      state.board[fromR][fromC] = movedCell;
+      validateAndMaybeComplete();
+      setStatus("Tile occupied", "Move to an empty 3D tile or drop off the board to return it to tray.", "bad");
+      return;
+    }
+    state.board[cell.r][cell.c] = movedCell;
+    state.roll[rollIndex].used = true;
+    renderPieces();
+    const placed = pieceGroup.children.find(piece => piece.userData.r === cell.r && piece.userData.c === cell.c);
+    if (placed) animateDrop(placed);
+    validateAndMaybeComplete({ pieces: false });
+  }
+
+  function removePlaced(r, c) {
+    if (state.locked) return;
+    const cell = state.board[r][c];
+    if (!cell) return;
+    state.roll[cell.rollIndex].used = false;
+    state.board[r][c] = null;
+    validateAndMaybeComplete();
+  }
+
+  function checkFeasibility() {
+    const pool = {};
+    for (let r = 0; r < BOARD_SIZE; r++) {
+      for (let c = 0; c < BOARD_SIZE; c++) {
+        const cell = state.board[r][c];
+        if (cell) {
+          const l = cell.face === '*' ? (cell.assigned || null) : cell.letter;
+          if (l) pool[l] = (pool[l] || 0) + 1;
+        }
+      }
+    }
+    const wildcards = state.roll.filter(d => !d.used && d.face === '*').length;
+    state.roll.filter(d => !d.used && d.face !== '*').forEach(d => {
+      pool[d.letter] = (pool[d.letter] || 0) + 1;
+    });
+    const stuck = [];
+    state.roll.forEach((die, index) => {
+      if (die.used || die.face === '*') return;
+      const candidates = WORDS_BY_LETTER[die.letter] || [];
+      const canForm = candidates.some(word => {
+        const need = {};
+        for (const ch of word) need[ch] = (need[ch] || 0) + 1;
+        let wildcardsNeeded = 0;
+        for (const [ch, count] of Object.entries(need)) {
+          const have = pool[ch] || 0;
+          if (have < count) wildcardsNeeded += count - have;
+        }
+        return wildcardsNeeded <= wildcards;
+      });
+      if (!canForm) stuck.push(index);
+    });
+    return stuck;
+  }
+
+  function validateAndMaybeComplete(options = {}) {
+    const { pieces = true } = options;
+    const validation = validateBoard();
+    state.lastValidation = validation;
+    state.lastScore = scoreBoard(validation);
+    state.stuckDice = state.isRolling ? [] : checkFeasibility();
+    updateStatus(validation);
+    renderAll({ pieces });
+    if (validation.complete && !state.locked) completeRound();
+  }
+
+  function validateBoard() {
+    const placed = [];
+    for (let r = 0; r < BOARD_SIZE; r++) {
+      for (let c = 0; c < BOARD_SIZE; c++) {
+        if (state.board[r][c]) placed.push({ r, c });
+      }
+    }
+    const words = extractWords();
+    const fragments = words.filter(w => w.text.length === 2);
+    const realWords = words.filter(w => w.text.length >= 3).map(w => ({ ...w, valid: WORDS.has(w.text) }));
+    const invalidWords = realWords.filter(w => !w.valid);
+    const unused = state.roll.filter(d => !d.used).length;
+    const connected = placed.length > 0 && isConnected(placed);
+    const unassignedWild = placed.some(({ r, c }) => state.board[r][c].face === "*" && !state.board[r][c].assigned);
+    const invalidCells = [...fragments.flatMap(w => w.cells), ...invalidWords.flatMap(w => w.cells)];
+    return {
+      placed,
+      words: realWords,
+      fragments,
+      invalidWords,
+      invalidCells,
+      unused,
+      connected,
+      unassignedWild,
+      complete: unused === 0 && connected && placed.length === state.roll.length && !unassignedWild && fragments.length === 0 && invalidWords.length === 0 && realWords.length > 0
+    };
+  }
+
+  function extractWords() {
+    const words = [];
+    for (let r = 0; r < BOARD_SIZE; r++) {
+      let current = [];
+      for (let c = 0; c <= BOARD_SIZE; c++) {
+        const cell = c < BOARD_SIZE ? state.board[r][c] : null;
+        if (cell) current.push({ r, c, letter: cell.assigned || "" });
+        if ((!cell || c === BOARD_SIZE) && current.length) {
+          if (current.length >= 2) {
+            words.push({ text: current.map(x => x.letter).join(""), cells: current.map(({ r, c }) => ({ r, c })), axis: "row" });
+          }
+          current = [];
+        }
+      }
+    }
+    for (let c = 0; c < BOARD_SIZE; c++) {
+      let current = [];
+      for (let r = 0; r <= BOARD_SIZE; r++) {
+        const cell = r < BOARD_SIZE ? state.board[r][c] : null;
+        if (cell) current.push({ r, c, letter: cell.assigned || "" });
+        if ((!cell || r === BOARD_SIZE) && current.length) {
+          if (current.length >= 2) {
+            words.push({ text: current.map(x => x.letter).join(""), cells: current.map(({ r, c }) => ({ r, c })), axis: "col" });
+          }
+          current = [];
+        }
+      }
+    }
+    return words;
+  }
+
+  function isConnected(placed) {
+    const placedSet = new Set(placed.map(posKey));
+    const seen = new Set();
+    const queue = [placed[0]];
+    seen.add(posKey(placed[0]));
+    while (queue.length) {
+      const pos = queue.shift();
+      neighbors(pos.r, pos.c).forEach(next => {
+        const key = posKey(next);
+        if (placedSet.has(key) && !seen.has(key)) {
+          seen.add(key);
+          queue.push(next);
+        }
+      });
+    }
+    return seen.size === placed.length;
+  }
+
+  function neighbors(r, c) {
+    return [
+      { r: r - 1, c }, { r: r + 1, c }, { r, c: c - 1 }, { r, c: c + 1 }
+    ].filter(p => p.r >= 0 && p.r < BOARD_SIZE && p.c >= 0 && p.c < BOARD_SIZE);
+  }
+
+  function findIntersections() {
+    const words = extractWords().filter(w => w.text.length >= 3);
+    const counts = new Map();
+    words.forEach(word => word.cells.forEach(cell => {
+      const key = posKey(cell);
+      counts.set(key, (counts.get(key) || 0) + 1);
+    }));
+    return new Set([...counts.entries()].filter(([, count]) => count > 1).map(([key]) => key));
+  }
+
+  function scoreBoard(validation) {
+    if (!validation) return { wordPoints: 0, intersectionPoints: 0, rarePoints: 0, upgradePoints: 0, total: 0 };
+    const validWords = validation.words.filter(w => w.valid);
+    const wordPoints = validWords.reduce((sum, word) => sum + word.text.length * word.text.length, 0);
+    const intersectionPoints = findIntersections().size * (3 + state.upgrades.intersectionBonus);
+    let rareCount = 0;
+    let consonants = 0;
+    validation.placed.forEach(({ r, c }) => {
+      const letter = state.board[r][c].assigned;
+      if (RARE.has(letter)) rareCount++;
+      if (!"AEIOU".includes(letter)) consonants++;
+    });
+    const rarePoints = rareCount * (4 + state.upgrades.rareBonus);
+    const fiveBonus = validWords.filter(w => w.text.length === 5).length * state.upgrades.fiveBonus;
+    const consonantBonus = consonants * state.upgrades.consonantBonus;
+    const upgradePoints = fiveBonus + consonantBonus;
+    return { wordPoints, intersectionPoints, rarePoints, upgradePoints, total: wordPoints + intersectionPoints + rarePoints + upgradePoints };
+  }
+
+  function updateStatus(validation) {
+    if (state.locked) return;
+    if (state.isRolling) return setStatus("Rolling dice", "Your letters are landing in the tray.", "ready");
+    if (validation.complete) return setStatus("Valid board", "The crossword locks automatically. Choose an upgrade.", "good");
+    if (validation.unused > 0) return setStatus(`${validation.unused} dice left`, "Same dice, new faces. Drag every rolled die onto the board.", "ready");
+    if (!validation.connected) return setStatus("Disconnected", "All placed dice must touch the same crossword.", "bad");
+    if (validation.fragments.length) return setStatus("Fragment found", "Two-letter runs are not words. Break or extend them.", "bad");
+    if (validation.invalidWords.length) return setStatus("Unknown word", `${validation.invalidWords[0].text} is not in the dictionary.`, "bad");
+    if (state.stuckDice?.length && validation.unused > 0) {
+      const letters = state.stuckDice.map(i => state.roll[i].letter).join(", ");
+      return setStatus("Looks stuck", `${letters} can't form any word with the letters in play.`, "bad");
+    }
+    setStatus("Almost", "The structure is close. Keep shaping the board.", "ready");
+  }
+
+  function setStatus(title, body, tone) {
+    els.status.className = `status ${tone || ""}`;
+    els.status.innerHTML = `<strong>${title}</strong><span>${body}</span>`;
+  }
+
+  function renderValidation() {
+    const validation = state.lastValidation;
+    els.wordList.innerHTML = "";
+    els.breakdown.innerHTML = "";
+    if (!validation || validation.words.length === 0) {
+      els.wordList.innerHTML = `<div class="word"><b>No words yet</b><span>Build runs of 3 or more.</span></div>`;
+    } else {
+      validation.words.forEach(word => {
+        const row = document.createElement("div");
+        row.className = `word${word.valid ? "" : " bad"}`;
+        row.innerHTML = `<b>${word.text}</b><span>${word.valid ? "valid" : "unknown"}</span>`;
+        els.wordList.appendChild(row);
+      });
+    }
+    if (validation?.fragments.length) {
+      validation.fragments.forEach(fragment => {
+        const row = document.createElement("div");
+        row.className = "word bad";
+        row.innerHTML = `<b>${fragment.text}</b><span>2-letter fragment</span>`;
+        els.wordList.appendChild(row);
+      });
+    }
+    const score = state.lastScore || scoreBoard(validation);
+    addBreakdown("Word points", score.wordPoints);
+    addBreakdown("Intersections", score.intersectionPoints);
+    addBreakdown("Rare letters", score.rarePoints);
+    addBreakdown("Upgrade bonuses", score.upgradePoints);
+    addBreakdown("Round total", score.total, true);
+  }
+
+  function addBreakdown(label, value, strong = false) {
+    const row = document.createElement("div");
+    row.className = "row";
+    row.innerHTML = `<span>${label}</span><${strong ? "strong" : "span"}>${value}</${strong ? "strong" : "span"}>`;
+    els.breakdown.appendChild(row);
+  }
+
+  function completeRound() {
+    state.locked = true;
+    const gained = state.lastScore.total;
+    state.score += gained;
+    els.upgradeSummary.textContent = `Round score ${gained}. Pick one upgrade before round ${state.round + 1}.`;
+    renderAll();
+    setTimeout(showUpgrades, 450);
+  }
+
+  function showUpgrades() {
+    els.upgradeGrid.innerHTML = "";
+    getUpgradeChoices().forEach(upgrade => {
+      const btn = document.createElement("button");
+      btn.className = "upgrade";
+      btn.type = "button";
+      btn.innerHTML = `<span>${upgrade.family}</span><strong>${upgrade.name}</strong><em>${upgrade.desc}</em>`;
+      btn.addEventListener("click", () => {
+        upgrade.apply();
+        state.round += 1;
+        state.target += 6 + Math.floor(state.round * 2.2);
+        startRound();
+      });
+      els.upgradeGrid.appendChild(btn);
+    });
+    els.modal.classList.add("show");
+  }
+
+  function getUpgradeChoices() {
+    const wildTarget = randomDie();
+    const vowelTarget = randomDie();
+    const rolledTarget = randomFrom(state.roll);
+    const duplicateTarget = state.dice.find(d => d.id === rolledTarget.dieId);
+    const candidates = [
+      {
+        family: "Dice Mutation",
+        name: `Wildcard Side: D${wildTarget.id}`,
+        desc: `D${wildTarget.id} can now roll a wildcard face.`,
+        apply: () => {
+          wildTarget.wild = true;
+          if (!wildTarget.faces.includes("*")) wildTarget.faces.push("*");
+          wildTarget.upgrades.push("wild");
+        }
+      },
+      {
+        family: "Dice Mutation",
+        name: `Extra Vowel: D${vowelTarget.id}`,
+        desc: `Add a useful vowel face to D${vowelTarget.id}.`,
+        apply: () => {
+          vowelTarget.faces.push(randomFrom(["A", "E", "I", "O"]));
+          vowelTarget.upgrades.push("vowel");
+        }
+      },
+      {
+        family: "Dice Mutation",
+        name: `Duplicate ${rolledTarget.assigned || rolledTarget.letter}: D${duplicateTarget.id}`,
+        desc: `Add another ${rolledTarget.assigned || rolledTarget.letter} face to D${duplicateTarget.id}.`,
+        apply: () => {
+          duplicateTarget.faces.push(rolledTarget.assigned || rolledTarget.letter);
+          duplicateTarget.upgrades.push("copy");
+        }
+      },
+      {
+        family: "Utility",
+        name: "Add Die",
+        desc: "Add one persistent die. Future rounds require one more letter.",
+        apply: () => {
+          const faces = ADD_DIE_FACES[(state.nextDieId - baseDice.length - 1) % ADD_DIE_FACES.length];
+          state.dice.push({ id: state.nextDieId, faces: [...faces], wild: false, upgrades: ["new"] });
+          state.nextDieId += 1;
+        }
+      },
+      {
+        family: "Utility",
+        name: "Extra Reroll",
+        desc: "Gain one more reroll every round.",
+        apply: () => { state.rerollsBase += 1; }
+      },
+      {
+        family: "Scoring Bias",
+        name: "Intersection Bonus",
+        desc: "Crossing letters score 2 extra points.",
+        apply: () => { state.upgrades.intersectionBonus += 2; }
+      },
+      {
+        family: "Scoring Bias",
+        name: "Five-Letter Prize",
+        desc: "Each 5-letter word scores 6 extra points.",
+        apply: () => { state.upgrades.fiveBonus += 6; }
+      },
+      {
+        family: "Scoring Bias",
+        name: "Rare Letter Drama",
+        desc: "Rare letters score 3 extra points.",
+        apply: () => { state.upgrades.rareBonus += 3; }
+      }
+    ];
+    return shuffle(candidates).slice(0, 3);
+  }
+
+  function reroll() {
+    if (state.isRolling || state.rerolls <= 0 || state.locked) return;
+    state.rerolls -= 1;
+    state.board = emptyBoard();
+    state.selectedWildIndex = null;
+    state.roll = rollDice();
+    state.lastValidation = null;
+    state.lastScore = null;
+    beginRollAnimation();
+  }
+
+  function clearBoard() {
+    if (state.isRolling || state.locked) return;
+    state.board = emptyBoard();
+    state.roll.forEach(die => { die.used = false; });
+    validateAndMaybeComplete();
+  }
+
+
+  function updateHover(x, y) {
+    const cell = pickTile(x, y);
+    currentHover = cell;
+    if (!cell) {
+      hoverMesh.visible = false;
+      return;
+    }
+    const p = tilePos(cell.c, cell.r);
+    hoverMesh.position.set(p.x, TOP_H + 0.035, p.z);
+    hoverMesh.material = state.board[cell.r][cell.c] ? M.hoverBad : M.hover;
+    hoverMesh.visible = true;
+  }
+
+  renderer.domElement.addEventListener("pointerdown", event => {
+    if (drag || state.isRolling || state.locked) return;
+    if (event.button !== 0 && event.pointerType === "mouse") return;
+    const placed = pickPlacedPiece(event.clientX, event.clientY);
+    if (placed) {
+      beginBoardDieDrag(event, placed);
+      return;
+    }
+    pointerDown = { x: event.clientX, y: event.clientY };
+    lastPointer = { x: event.clientX, y: event.clientY };
+    didOrbitDrag = false;
+    renderer.domElement.classList.add("dragging");
+    renderer.domElement.setPointerCapture(event.pointerId);
+  });
+
+  renderer.domElement.addEventListener("pointermove", event => {
+    if (drag) return;
+    updateHover(event.clientX, event.clientY);
+    if (!pointerDown) return;
+    const dx = event.clientX - pointerDown.x;
+    const dy = event.clientY - pointerDown.y;
+    if (!didOrbitDrag && Math.abs(dx) + Math.abs(dy) > DRAG_THRESHOLD) didOrbitDrag = true;
+    if (didOrbitDrag) {
+      const ddx = event.clientX - lastPointer.x;
+      const ddy = event.clientY - lastPointer.y;
+      azimuth -= ddx * 0.008;
+      polar = Math.max(0.18, Math.min(1.35, polar - ddy * 0.006));
+      updateCamera();
+    }
+    lastPointer = { x: event.clientX, y: event.clientY };
+  });
+
+  renderer.domElement.addEventListener("pointerup", event => {
+    renderer.domElement.classList.remove("dragging");
+    pointerDown = null;
+    lastPointer = null;
+  });
+
+  renderer.domElement.addEventListener("pointercancel", () => {
+    renderer.domElement.classList.remove("dragging");
+    pointerDown = null;
+    lastPointer = null;
+  });
+
+  renderer.domElement.addEventListener("wheel", event => {
+    event.preventDefault();
+    viewSize = Math.max(4.4, Math.min(9.5, viewSize + event.deltaY * 0.004));
+    onResize();
+  }, { passive: false });
+
+  window.addEventListener("keydown", event => {
+    if (state.isRolling) return;
+    const key = event.key.toLowerCase();
+    if (key === "r") reroll();
+    if (key === "c") clearBoard();
+    if (key === "n") newRun();
+  });
+
+  els.reroll.addEventListener("click", reroll);
+  els.clear.addEventListener("click", clearBoard);
+  els.newRun.addEventListener("click", newRun);
+
+  function randomDie() {
+    return state.dice[Math.floor(Math.random() * state.dice.length)];
+  }
+
+  function randomFrom(items) {
+    return items[Math.floor(Math.random() * items.length)];
+  }
+
+  function shuffle(items) {
+    return [...items].sort(() => Math.random() - 0.5);
+  }
+
+  function posKey(pos) {
+    return `${pos.r},${pos.c}`;
+  }
+
+  function onResize() {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    const aspect = w / h;
+    camera.left = -viewSize * aspect;
+    camera.right = viewSize * aspect;
+    camera.top = viewSize;
+    camera.bottom = -viewSize;
+    camera.updateProjectionMatrix();
+    perspCamera.aspect = aspect;
+    perspCamera.updateProjectionMatrix();
+    renderer.setSize(w, h);
+    updateCamera();
+  }
+
+  let prevT = 0;
+  function animate(now) {
+    requestAnimationFrame(animate);
+    const t = now / 1000;
+    const dt = prevT ? Math.min(t - prevT, 0.05) : 0;
+    prevT = t;
+    if (dropAnims.length) tickDropAnims(dt);
+    if (state.isRolling) tickRollStage(now);
+    renderer.render(scene, usePerspective ? perspCamera : camera);
+  }
+
+  window.addEventListener("resize", onResize);
+
+  const DEFAULT_POLAR = 0.52;
+  const DEFAULT_AZIMUTH = Math.PI * 0.25;
+  const DEFAULT_VIEW_SIZE = 5.8;
+
+  els.perspBtn.addEventListener("click", () => {
+    usePerspective = !usePerspective;
+    els.perspBtn.textContent = usePerspective ? "PERSP" : "ISO";
+    els.perspBtn.classList.toggle("active", !usePerspective);
+  });
+
+  els.resetCamBtn.addEventListener("click", () => {
+    polar = DEFAULT_POLAR;
+    azimuth = DEFAULT_AZIMUTH;
+    viewSize = DEFAULT_VIEW_SIZE;
+    onResize();
+  });
+
+  buildBoard();
+  onResize();
+  newRun();
+  requestAnimationFrame(animate);
   </script>
 </body>
 </html>
