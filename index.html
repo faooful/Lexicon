@@ -148,7 +148,7 @@
     left: 18px;
     bottom: 18px;
     z-index: 10;
-    width: min(520px, calc(100vw - 36px));
+    width: min(340px, calc(100vw - 36px));
     padding: 14px;
   }
 
@@ -195,73 +195,56 @@
   .status.ready { border-color: rgba(228, 184, 78, 0.46); }
 
   .dice {
-    position: relative;
-    height: clamp(214px, 26vw, 246px);
-    margin-top: 12px;
-    border: 1px solid rgba(244, 242, 234, 0.15);
-    border-radius: 8px;
-    background:
-      linear-gradient(180deg, rgba(244, 242, 234, 0.055), rgba(0, 0, 0, 0.14)),
-      rgba(6, 8, 7, 0.46);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.06),
-      inset 0 -12px 24px rgba(0, 0, 0, 0.2),
-      0 14px 30px rgba(0, 0, 0, 0.2);
-    overflow: hidden;
+    position: fixed;
+    inset: 0;
+    z-index: 16;
+    pointer-events: none;
   }
 
   .die {
     position: absolute;
     display: grid;
     grid-template-rows: 24px 1fr 24px;
-    border: 1px solid rgba(22, 25, 20, 0.2);
-    border-radius: 8px;
-    background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(225, 218, 198, 0.96)),
-      var(--tile);
-    color: var(--tile-ink);
+    border: 0;
+    border-radius: 12px;
+    background: transparent;
+    color: transparent;
     cursor: grab;
     isolation: isolate;
     padding: 6px 8px;
     font-weight: 850;
     line-height: 1;
-    box-shadow: 0 12px 20px rgba(0, 0, 0, 0.22), inset 0 -5px 0 rgba(0, 0, 0, 0.08);
-    transition: opacity 0.18s, transform 0.18s, border-color 0.12s, background 0.12s;
+    box-shadow: none;
+    opacity: 0.01;
+    transition: opacity 0.18s, transform 0.18s;
     touch-action: none;
+    pointer-events: auto;
   }
 
   .die:hover {
-    border-color: rgba(228, 184, 78, 0.72);
-    transform: translateY(-2px);
+    opacity: 0.08;
   }
 
   .die.dragging {
-    opacity: 0.58;
+    opacity: 0.01;
     cursor: grabbing;
-    border-color: rgba(228, 184, 78, 0.48);
   }
 
   .die.used {
-    opacity: 0.38;
+    opacity: 0;
     cursor: default;
-    transform: none;
-    filter: grayscale(0.35);
   }
 
   .die.stuck {
-    border-color: rgba(228, 140, 50, 0.7);
-    box-shadow: 0 0 0 2px rgba(228, 140, 50, 0.18), 0 12px 20px rgba(0, 0, 0, 0.22);
+    opacity: 0.08;
   }
 
   .die.wild {
-    color: #735500;
-    border-color: rgba(228, 184, 78, 0.8);
-    background: linear-gradient(180deg, #ffefab, #efd070);
+    color: transparent;
+    background: transparent;
   }
 
-  .die.has-wild {
-    border-color: rgba(228, 184, 78, 0.72);
-  }
+  .die.has-wild { background: transparent; }
 
   .die.mutated .die-id::after {
     content: "";
@@ -287,6 +270,7 @@
     font: 900 9px/1 var(--mono);
     letter-spacing: 0.05em;
     z-index: 2;
+    opacity: 0;
   }
 
   .die-current {
@@ -301,6 +285,7 @@
     font: 950 46px/0.92 var(--sans);
     box-shadow: none;
     z-index: 2;
+    opacity: 0;
   }
 
   .die.wild .die-current {
@@ -319,6 +304,7 @@
     white-space: nowrap;
     letter-spacing: 0.08em;
     z-index: 2;
+    opacity: 0;
   }
 
   .dice.rolling .die {
@@ -420,24 +406,6 @@
     font-weight: 850;
   }
 
-  .drag-ghost {
-    position: fixed;
-    z-index: 30;
-    width: 70px;
-    height: 70px;
-    display: none;
-    place-items: center;
-    border-radius: 12px;
-    background: linear-gradient(145deg, #ffffff, #ddd7c8);
-    color: var(--tile-ink);
-    pointer-events: none;
-    font-size: 36px;
-    font-weight: 900;
-    box-shadow: 0 18px 35px rgba(0, 0, 0, 0.36), inset 0 -8px 0 rgba(0, 0, 0, 0.14);
-  }
-
-  .drag-ghost.show { display: grid; }
-
   .modal {
     position: fixed;
     inset: 0;
@@ -519,7 +487,7 @@
     line-height: 1.36;
   }
 
-  @media (max-width: 880px) {
+  @media (max-width: 1180px) {
     .topbar {
       flex-direction: column;
       right: auto;
@@ -538,10 +506,16 @@
     }
   }
 
+  @media (max-width: 880px) {
+    .tray {
+      width: calc(100vw - 36px);
+    }
+
+  }
+
   @media (max-width: 600px) {
     .brand { padding: 12px; }
     .tray { padding: 12px; }
-    .dice { height: 210px; }
     .die-current { font-size: 36px; }
     .die-faces { font-size: 8px; }
   }
@@ -573,23 +547,22 @@
       <strong>Roll ready</strong>
       <span>Drag a die onto a 3D tile.</span>
     </div>
-    <div class="dice" id="diceTray" aria-label="Dice tray"></div>
     <div class="wild-picker" id="wildPicker" aria-label="Wildcard letter picker"></div>
     <div class="controls">
       <button class="btn primary" id="rerollBtn">Reroll 1</button>
       <button class="btn" id="clearBtn">Clear</button>
       <button class="btn" id="newRunBtn">New Run</button>
     </div>
-    <p class="hint">Drag from tray to board. Drag placed dice to move them or drop off-board to return.</p>
+    <p class="hint">Drag a floating die to the board. Drag placed dice to move them or drop off-board to return.</p>
   </aside>
+
+  <div class="dice" id="diceTray" aria-label="Floating dice"></div>
 
   <aside class="panel side">
     <h2>Validation</h2>
     <div class="word-list" id="wordList"></div>
     <div class="breakdown" id="breakdown"></div>
   </aside>
-
-  <div class="drag-ghost" id="dragGhost"></div>
 
   <div class="modal" id="upgradeModal" role="dialog" aria-modal="true" aria-labelledby="upgradeTitle">
     <div class="modal-box">
@@ -605,6 +578,9 @@
   const BOARD_SIZE = 5;
   const TILE = 1;
   const TOP_H = 0.18;
+  const DOCK_Y = TOP_H + 1.18;
+  const DRAG_Y = TOP_H + 1.42;
+  const DOCK_SCALE = 0.86;
   const DIRT_H = 0.42;
   const RARE = new Set(["J", "Q", "X", "Z", "K", "V", "W", "Y"]);
   const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
@@ -651,7 +627,6 @@
     clear: document.getElementById("clearBtn"),
     newRun: document.getElementById("newRunBtn"),
 
-    ghost: document.getElementById("dragGhost"),
     modal: document.getElementById("upgradeModal"),
     upgradeGrid: document.getElementById("upgradeGrid"),
     upgradeSummary: document.getElementById("upgradeSummary"),
@@ -688,6 +663,7 @@
     camera.lookAt(target);
     perspCamera.position.set(cx, cy, cz);
     perspCamera.lookAt(target);
+    if (state.roll?.length) renderDiceTray();
   }
 
   scene.add(new THREE.HemisphereLight(0xffffff, 0x5a4f3d, 0.38));
@@ -815,6 +791,7 @@
   scene.add(hoverMesh);
 
   const dropAnims = [];
+  const dockAnims = [];
   const easeOutBack = (t, c1 = 1.70158) => {
     const c3 = c1 + 1;
     return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
@@ -827,6 +804,16 @@
   const _v3 = new THREE.Vector3();
   const _vW = new THREE.Vector3();
   const _vY = new THREE.Vector3(0, 1, 0);
+  const _camRight = new THREE.Vector3();
+  const _camUp = new THREE.Vector3();
+  const _dragOffset = new THREE.Vector3();
+  const _targetQ = new THREE.Quaternion();
+  const _tiltQ = new THREE.Quaternion();
+  const _dockQ = new THREE.Quaternion();
+  const _dockNormal = new THREE.Vector3();
+  const _idleQ = new THREE.Quaternion();
+  const _tiltAxisA = new THREE.Vector3(1, 0, 0);
+  const _tiltAxisB = new THREE.Vector3(0, 0, 1);
 
   function animateDrop(obj, distance = 1.4, dur = 0.42) {
     const baseY = obj.position.y;
@@ -847,8 +834,54 @@
     }
   }
 
+  function tickDockAnims(dt) {
+    let changed = false;
+    for (let i = dockAnims.length - 1; i >= 0; i--) {
+      const anim = dockAnims[i];
+      anim.t += dt;
+      const localT = Math.max(0, anim.t - anim.delay);
+      if (localT <= 0) continue;
+      const u = Math.min(1, localT / anim.dur);
+      const eased = 1 - Math.pow(1 - u, 3);
+      anim.piece.position.lerpVectors(anim.fromPosition, anim.toPosition, eased);
+      anim.piece.quaternion.copy(anim.fromQuaternion).slerp(anim.toQuaternion, eased);
+      anim.piece.scale.setScalar(anim.fromScale.x + (anim.toScale.x - anim.fromScale.x) * eased);
+      anim.piece.position.y += Math.sin(eased * Math.PI) * 0.36;
+      changed = true;
+      if (u >= 1) {
+        anim.piece.position.copy(anim.toPosition);
+        anim.piece.quaternion.copy(anim.toQuaternion);
+        anim.piece.scale.copy(anim.toScale);
+        setDockHome(anim.piece, anim.toPosition, anim.toQuaternion);
+        dockAnims.splice(i, 1);
+      }
+    }
+    if (changed) renderDiceTray();
+  }
+
+  function tickDockIdle(now) {
+    if (state.isRolling || drag || dockAnims.length) return;
+    let changed = false;
+    rollStageGroup.children.forEach((piece, index) => {
+      if (!piece.visible || state.roll[index]?.used || !piece.userData.dockPosition || !piece.userData.dockQuaternion) return;
+      const phase = now * 0.0018 + index * 0.74;
+      const bob = Math.sin(phase) * 0.055;
+      const sway = Math.sin(phase * 0.72 + 1.4) * 0.024;
+      piece.position.copy(piece.userData.dockPosition);
+      piece.position.y += bob;
+      _idleQ.setFromAxisAngle(_dockNormal.copy(piece.userData.dockPosition).sub(target).normalize(), sway);
+      piece.quaternion.copy(piece.userData.dockQuaternion).premultiply(_idleQ);
+      changed = true;
+    });
+    if (changed) renderDiceTray();
+  }
+
   const raycaster = new THREE.Raycaster();
   const ndc = new THREE.Vector2();
+  const dragPoint = new THREE.Vector3();
+  const homePoint = new THREE.Vector3();
+  const screenWorldPoint = new THREE.Vector3();
+  const screenWorldDir = new THREE.Vector3();
 
   function pickTile(clientX, clientY) {
     ndc.x = (clientX / window.innerWidth) * 2 - 1;
@@ -874,6 +907,28 @@
       if (n && n.userData.rollIndex !== undefined) return n.userData;
     }
     return null;
+  }
+
+  function pointerToDragPoint(clientX, clientY) {
+    return pointerToPlanePoint(clientX, clientY, DRAG_Y, dragPoint);
+  }
+
+  function pointerToPlanePoint(clientX, clientY, planeY, out) {
+    ndc.x = (clientX / window.innerWidth) * 2 - 1;
+    ndc.y = -(clientY / window.innerHeight) * 2 + 1;
+    const activeCamera = usePerspective ? perspCamera : camera;
+    activeCamera.updateMatrixWorld(true);
+    screenWorldPoint.set(ndc.x, ndc.y, usePerspective ? 0.5 : 0).unproject(activeCamera);
+    if (usePerspective) {
+      screenWorldDir.copy(screenWorldPoint).sub(activeCamera.position).normalize();
+    } else {
+      activeCamera.getWorldDirection(screenWorldDir);
+    }
+    if (Math.abs(screenWorldDir.y) < 1e-5) return null;
+    const t = (planeY - screenWorldPoint.y) / screenWorldDir.y;
+    if (!Number.isFinite(t)) return null;
+    out.copy(screenWorldPoint).addScaledVector(screenWorldDir, t);
+    return out;
   }
 
   function makeDieFaceTexture(letter, isWild, role = "side") {
@@ -1089,7 +1144,7 @@
     renderWildcardPicker();
     if (pieces) renderPieces();
     renderValidation();
-    if (state.isRolling) setStatus("Rolling dice", "Your letters are landing in the tray.", "ready");
+    if (state.isRolling) setStatus("Rolling dice", "Your letters are landing below the board.", "ready");
   }
 
   function renderDiceTray() {
@@ -1097,24 +1152,24 @@
     const traySettling = Date.now() < (state.traySettlingUntil || 0);
     els.tray.classList.toggle("rolling", Boolean(state.isRolling));
     els.tray.classList.toggle("settling", traySettling);
-    const trayRect = els.tray.getBoundingClientRect();
     state.roll.forEach((die, index) => {
       const source = state.dice.find(d => d.id === die.dieId);
       const faceText = source ? source.faces.join(" ") : "";
       const isMutated = source && (source.upgrades.length > 0 || source.faces.length > 6);
       const layout = trayDieLayout(index, state.roll.length);
-      const cardCenterX = trayRect.left + trayRect.width * ((layout.left + layout.width / 2) / 100);
-      const cardCenterY = trayRect.top + trayRect.height * ((layout.top + layout.height / 2) / 100);
+      const hitbox = rollStageHitbox(index, layout);
+      const cardCenterX = hitbox.left + hitbox.width / 2;
+      const cardCenterY = hitbox.top + hitbox.height / 2;
       const flySource = rollFlySource(index, state.roll.length);
       const btn = document.createElement("button");
       btn.className = `die${die.face === "*" ? " wild" : ""}${source?.wild ? " has-wild" : ""}${isMutated ? " mutated" : ""}${die.used ? " used" : ""}${drag?.rollIndex === index ? " dragging" : ""}${state.stuckDice?.includes(index) ? " stuck" : ""}`;
       btn.type = "button";
       btn.disabled = state.isRolling || die.used || state.locked;
       btn.title = `D${die.dieId}: ${faceText}`;
-      btn.style.left = `${layout.left}%`;
-      btn.style.top = `${layout.top}%`;
-      btn.style.width = `${layout.width}%`;
-      btn.style.height = `${layout.height}%`;
+      btn.style.left = `${hitbox.left}px`;
+      btn.style.top = `${hitbox.top}px`;
+      btn.style.width = `${hitbox.width}px`;
+      btn.style.height = `${hitbox.height}px`;
       btn.style.transitionDelay = state.isRolling ? "0ms" : `${80 + index * 28}ms`;
       btn.style.setProperty("--fly-x", `${flySource.x - cardCenterX}px`);
       btn.style.setProperty("--fly-y", `${flySource.y - cardCenterY}px`);
@@ -1133,6 +1188,44 @@
         }
       });
       els.tray.appendChild(btn);
+    });
+    syncRollStageDiceVisuals();
+  }
+
+  function rollStageHitbox(index, fallbackLayout) {
+    const piece = rollStageGroup.children[index];
+    if (piece) {
+      const point = piece.position.clone().project(usePerspective ? perspCamera : camera);
+      const x = (point.x * 0.5 + 0.5) * window.innerWidth;
+      const y = (-point.y * 0.5 + 0.5) * window.innerHeight;
+      const size = Math.max(74, Math.min(118, window.innerWidth * 0.078));
+      return {
+        left: x - size / 2,
+        top: y - size / 2,
+        width: size,
+        height: size
+      };
+    }
+    const cols = Math.ceil(state.roll.length / 2);
+    const fallbackWidth = Math.min(640, Math.max(430, window.innerWidth - 760));
+    const fallbackHeight = Math.max(178, Math.min(214, window.innerWidth * 0.18));
+    const left = window.innerWidth / 2 - fallbackWidth / 2 + fallbackWidth * (fallbackLayout.left / 100);
+    const top = window.innerHeight - 18 - fallbackHeight + fallbackHeight * (fallbackLayout.top / 100);
+    return {
+      left,
+      top,
+      width: fallbackWidth * (fallbackLayout.width / 100),
+      height: fallbackHeight * (fallbackLayout.height / 100),
+      cols
+    };
+  }
+
+  function syncRollStageDiceVisuals() {
+    rollStageGroup.children.forEach((piece, index) => {
+      if (drag?.object === piece) return;
+      const isUnavailable = state.roll[index]?.used || state.locked;
+      piece.visible = !isUnavailable || state.isRolling;
+      piece.scale.setScalar(state.stuckDice?.includes(index) ? 1.02 : 0.96);
     });
   }
 
@@ -1188,13 +1281,63 @@
 
   function finishRollAnimation(animationId) {
     if (!state.isRolling || animationId !== state.rollAnimationId) return;
+    tickRollStage(performance.now());
     state.isRolling = false;
     state.traySettlingUntil = Date.now() + 820;
-    clearRollStage();
+    startDockAnimation();
+    syncRollStageDiceVisuals();
     validateAndMaybeComplete();
     window.setTimeout(() => {
       if (animationId === state.rollAnimationId) renderDiceTray();
     }, 860);
+  }
+
+  function settleRollStageDice() {
+    rollStageGroup.children.forEach((piece, index) => {
+      const home = rollDockPosition(index, rollStageGroup.children.length);
+      piece.position.set(home.x, DOCK_Y, home.z);
+      piece.quaternion.copy(dockFaceQuaternion(piece.position, index));
+      piece.scale.setScalar(DOCK_SCALE);
+      setDockHome(piece, piece.position, piece.quaternion);
+      piece.userData.collOffsetX = 0;
+      piece.userData.collOffsetZ = 0;
+    });
+  }
+
+  function setDockHome(piece, position, quaternion) {
+    piece.userData.dockPosition = position.clone();
+    piece.userData.dockQuaternion = quaternion.clone();
+  }
+
+  function startDockAnimation() {
+    dockAnims.length = 0;
+    rollStageGroup.children.forEach((piece, index) => {
+      const dock = rollDockPosition(index, rollStageGroup.children.length);
+      dockAnims.push({
+        piece,
+        fromPosition: piece.position.clone(),
+        toPosition: new THREE.Vector3(dock.x, DOCK_Y, dock.z),
+        fromQuaternion: piece.quaternion.clone(),
+        toQuaternion: dockFaceQuaternion(new THREE.Vector3(dock.x, DOCK_Y, dock.z), index).clone(),
+        fromScale: piece.scale.clone(),
+        toScale: new THREE.Vector3(DOCK_SCALE, DOCK_SCALE, DOCK_SCALE),
+        delay: index * 0.026,
+        dur: 0.72,
+        t: 0
+      });
+      piece.userData.collOffsetX = 0;
+      piece.userData.collOffsetZ = 0;
+    });
+  }
+
+  function dockFaceQuaternion(position, index) {
+    const activeCamera = usePerspective ? perspCamera : camera;
+    activeCamera.updateMatrixWorld(true);
+    _dockNormal.copy(activeCamera.position).sub(position).normalize();
+    _dockNormal.multiplyScalar(0.94).addScaledVector(_vY, 0.06).normalize();
+    _dockQ.setFromUnitVectors(_vY, _dockNormal);
+    _tiltQ.setFromAxisAngle(_dockNormal, Math.PI * 0.25 + [-0.025, 0.02, -0.015, 0.025, 0.02, -0.02, 0.015, -0.015][index % 8]);
+    return _dockQ.premultiply(_tiltQ);
   }
 
   function clearRollStage() {
@@ -1262,6 +1405,28 @@
     const span = Math.min(6.4, Math.max(1.6, (cols - 1) * 1.8));
     const x = cols === 1 ? 0 : -span / 2 + col * (span / (cols - 1));
     return { x, z: row ? 1.4 : -1.4 };
+  }
+
+  function rollDockPosition(index, count) {
+    const cols = Math.ceil(count / 2);
+    const row = index >= cols ? 1 : 0;
+    const col = row ? index - cols : index;
+    const activeCamera = usePerspective ? perspCamera : camera;
+    activeCamera.updateMatrixWorld(true);
+    const right = new THREE.Vector3().setFromMatrixColumn(activeCamera.matrixWorld, 0);
+    const down = new THREE.Vector3().setFromMatrixColumn(activeCamera.matrixWorld, 1).multiplyScalar(-1);
+    right.y = 0;
+    down.y = 0;
+    right.normalize();
+    down.normalize();
+    const span = Math.min(5.2, Math.max(1.8, (cols - 1) * 1.42));
+    const offset = cols === 1 ? 0 : -span / 2 + col * (span / (cols - 1));
+    const base = new THREE.Vector3(3.25, 0, 6.15);
+    base.addScaledVector(right, 1.55);
+    base.addScaledVector(down, -1.35);
+    base.addScaledVector(right, offset);
+    base.addScaledVector(down, row ? 1.22 : 0);
+    return { x: base.x, z: base.z };
   }
 
   function rollLane(index, count, home) {
@@ -1419,11 +1584,26 @@
       return;
     }
     event.preventDefault();
-    drag = { type: "tray", rollIndex: index };
+    const piece = rollStageGroup.children[index];
+    drag = {
+      type: "tray",
+      rollIndex: index,
+      object: piece,
+      homePosition: piece ? piece.position.clone() : null,
+      homeQuaternion: piece ? piece.quaternion.clone() : null,
+      homeScale: piece ? piece.scale.clone() : null,
+      velocity: new THREE.Vector3(),
+      targetPosition: piece ? piece.position.clone() : new THREE.Vector3(),
+      targetQuaternion: piece ? piece.quaternion.clone() : new THREE.Quaternion(),
+      lastClientX: event.clientX,
+      lastClientY: event.clientY
+    };
     renderer.domElement.classList.add("placing");
-    els.ghost.textContent = die.face === "*" ? die.assigned || "*" : die.letter;
-    els.ghost.classList.add("show");
-    moveGhost(event.clientX, event.clientY);
+    if (piece) {
+      piece.visible = true;
+      piece.scale.setScalar(1.08);
+    }
+    updateDragTarget(event.clientX, event.clientY);
     renderDiceTray();
   }
 
@@ -1437,24 +1617,72 @@
       rollIndex: cell.rollIndex,
       fromR: placed.r,
       fromC: placed.c,
-      cell
+      cell,
+      object: makeLetterDie(cell),
+      isPreviewObject: true,
+      velocity: new THREE.Vector3(),
+      targetPosition: new THREE.Vector3(),
+      targetQuaternion: new THREE.Quaternion(),
+      lastClientX: event.clientX,
+      lastClientY: event.clientY
     };
     state.board[placed.r][placed.c] = null;
+    const p = tilePos(placed.c, placed.r);
+    drag.object.position.set(p.x, TOP_H + 0.5, p.z);
+    drag.object.scale.setScalar(1.08);
+    drag.targetPosition.copy(drag.object.position);
+    drag.targetQuaternion.copy(drag.object.quaternion);
+    boardGroup.add(drag.object);
     renderer.domElement.classList.add("placing");
-    els.ghost.textContent = cell.face === "*" ? cell.assigned || "*" : cell.assigned || cell.letter;
-    els.ghost.classList.add("show");
-    moveGhost(event.clientX, event.clientY);
+    updateDragTarget(event.clientX, event.clientY);
     renderPieces();
     updateHover(event.clientX, event.clientY);
   }
 
-  function moveGhost(x, y) {
-    els.ghost.style.transform = `translate(${x + 14}px, ${y + 14}px)`;
+  function updateDragTarget(x, y) {
+    if (!drag?.object) return;
+    const p = pointerToDragPoint(x, y);
+    if (!p) return;
+    const activeCamera = usePerspective ? perspCamera : camera;
+    _camRight.setFromMatrixColumn(activeCamera.matrixWorld, 0);
+    _camUp.setFromMatrixColumn(activeCamera.matrixWorld, 1);
+    _dragOffset
+      .copy(_camRight).multiplyScalar(-0.24)
+      .addScaledVector(_camUp, -0.18);
+    drag.targetPosition.copy(p).add(_dragOffset);
+    drag.targetPosition.y = DRAG_Y;
+    const dx = x - (drag.lastClientX ?? x);
+    const dy = y - (drag.lastClientY ?? y);
+    drag.lastClientX = x;
+    drag.lastClientY = y;
+    const baseQ = drag.homeQuaternion || drag.object.quaternion;
+    const tiltX = Math.max(-0.38, Math.min(0.38, dy * 0.012 - 0.14));
+    const tiltZ = Math.max(-0.44, Math.min(0.44, -dx * 0.012 + 0.1));
+    _targetQ.copy(baseQ);
+    _tiltQ.setFromAxisAngle(_tiltAxisA, tiltX);
+    _targetQ.premultiply(_tiltQ);
+    _tiltQ.setFromAxisAngle(_tiltAxisB, tiltZ);
+    _targetQ.premultiply(_tiltQ);
+    drag.targetQuaternion.copy(_targetQ);
+  }
+
+  function tickDragObject(dt) {
+    if (!drag?.object || !drag.targetPosition) return;
+    const stiffness = 42;
+    const damping = 12;
+    _v3.copy(drag.targetPosition).sub(drag.object.position).multiplyScalar(stiffness);
+    drag.velocity.addScaledVector(_v3, dt);
+    drag.velocity.multiplyScalar(Math.max(0, 1 - damping * dt));
+    drag.object.position.addScaledVector(drag.velocity, dt);
+    drag.object.quaternion.slerp(drag.targetQuaternion, Math.min(1, dt * 14));
+    const pulse = 1.08 + Math.min(0.07, drag.velocity.length() * 0.006);
+    drag.object.scale.setScalar(pulse);
+    renderDiceTray();
   }
 
   window.addEventListener("pointermove", event => {
     if (!drag) return;
-    moveGhost(event.clientX, event.clientY);
+    updateDragTarget(event.clientX, event.clientY);
     updateHover(event.clientX, event.clientY);
   });
 
@@ -1462,24 +1690,42 @@
     if (!drag) return;
     const cell = pickTile(event.clientX, event.clientY);
     const activeDrag = drag;
-    endDrag();
     if (activeDrag.type === "board") {
+      endDrag({ restore: !cell });
       finishBoardDieDrag(activeDrag, cell);
     } else {
       if (!cell) {
+        endDrag({ restore: true });
         setStatus("Drop cancelled", "Release over an empty board tile to place a die.", "ready");
         return;
       }
+      if (state.board[cell.r][cell.c]) {
+        endDrag({ restore: true });
+        placeDie(activeDrag.rollIndex, cell.r, cell.c);
+        return;
+      }
+      endDrag({ restore: false });
       placeDie(activeDrag.rollIndex, cell.r, cell.c);
     }
   });
 
-  function endDrag() {
+  function endDrag(options = {}) {
+    const { restore = true } = options;
+    const activeDrag = drag;
+    if (activeDrag?.object) {
+      if (activeDrag.isPreviewObject) {
+        boardGroup.remove(activeDrag.object);
+        disposeObject(activeDrag.object);
+      } else if (restore) {
+        if (activeDrag.homePosition) activeDrag.object.position.copy(activeDrag.homePosition);
+        if (activeDrag.homeQuaternion) activeDrag.object.quaternion.copy(activeDrag.homeQuaternion);
+        if (activeDrag.homeScale) activeDrag.object.scale.copy(activeDrag.homeScale);
+      }
+    }
     drag = null;
     hoverMesh.visible = false;
     currentHover = null;
     renderer.domElement.classList.remove("placing");
-    els.ghost.classList.remove("show");
     renderDiceTray();
   }
 
@@ -1512,7 +1758,7 @@
     if (state.board[cell.r][cell.c]) {
       state.board[fromR][fromC] = movedCell;
       validateAndMaybeComplete();
-      setStatus("Tile occupied", "Move to an empty 3D tile or drop off the board to return it to tray.", "bad");
+      setStatus("Tile occupied", "Move to an empty 3D tile or drop off the board to return it.", "bad");
       return;
     }
     state.board[cell.r][cell.c] = movedCell;
@@ -1691,7 +1937,7 @@
 
   function updateStatus(validation) {
     if (state.locked) return;
-    if (state.isRolling) return setStatus("Rolling dice", "Your letters are landing in the tray.", "ready");
+    if (state.isRolling) return setStatus("Rolling dice", "Your letters are landing below the board.", "ready");
     if (validation.complete) return setStatus("Valid board", "The crossword locks automatically. Choose an upgrade.", "good");
     if (validation.unused > 0) return setStatus(`${validation.unused} dice left`, "Same dice, new faces. Drag every rolled die onto the board.", "ready");
     if (!validation.connected) return setStatus("Disconnected", "All placed dice must touch the same crossword.", "bad");
@@ -1968,6 +2214,10 @@
     perspCamera.updateProjectionMatrix();
     renderer.setSize(w, h);
     updateCamera();
+    if (state.roll?.length && !state.isRolling && !drag && dockAnims.length === 0) {
+      settleRollStageDice();
+      renderDiceTray();
+    }
   }
 
   let prevT = 0;
@@ -1977,6 +2227,9 @@
     const dt = prevT ? Math.min(t - prevT, 0.05) : 0;
     prevT = t;
     if (dropAnims.length) tickDropAnims(dt);
+    if (dockAnims.length) tickDockAnims(dt);
+    if (drag) tickDragObject(dt);
+    tickDockIdle(now);
     if (state.isRolling) tickRollStage(now);
     renderer.render(scene, usePerspective ? perspCamera : camera);
   }
