@@ -1,5 +1,7 @@
 import { BOARD_SIZE, STARTING_DICE_FACES } from "./config.js";
 
+export const STARTER_ROLL_LETTERS = ["A", "T", "C", "R", "E", "A", "R", "T"];
+
 export function createBaseDice() {
   return STARTING_DICE_FACES.map((faces, i) => ({
     id: i + 1,
@@ -60,6 +62,23 @@ export function rollDice(state) {
       face: letter,
       letter,
       assigned: letter === "*" ? "" : letter,
+      used: false
+    };
+  });
+}
+
+export function createStarterRoll(state) {
+  return state.dice.map((die, index) => {
+    const letter = STARTER_ROLL_LETTERS[index] || die.faces[0];
+    if (!die.faces.includes(letter)) {
+      throw new Error(`Starter letter ${letter} is not on die ${die.id}`);
+    }
+    return {
+      id: `starter-${state.round}-${die.id}`,
+      dieId: die.id,
+      face: letter,
+      letter,
+      assigned: letter,
       used: false
     };
   });

@@ -67,6 +67,28 @@
   .cam-btn:hover { background: rgba(244, 242, 234, 0.12); color: var(--ink); }
   .cam-btn.active { border-color: rgba(228, 184, 78, 0.46); color: #f4d47a; background: rgba(228, 184, 78, 0.12); }
 
+  .help-btn {
+    position: fixed;
+    top: 18px;
+    right: calc(min(360px, 100vw - 36px) + 36px);
+    z-index: 22;
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--line-strong);
+    border-radius: 50%;
+    background: rgba(6, 8, 7, 0.72);
+    color: var(--ink);
+    cursor: pointer;
+    font: 900 18px/1 var(--sans);
+    backdrop-filter: blur(6px);
+  }
+
+  .help-btn:hover {
+    border-color: rgba(228, 184, 78, 0.5);
+    color: #f4d47a;
+    background: rgba(228, 184, 78, 0.12);
+  }
+
   .topbar {
     position: fixed;
     top: 18px;
@@ -435,6 +457,95 @@
     color: var(--muted);
   }
 
+  .onboarding-box {
+    width: min(620px, 100%);
+  }
+
+  .onboarding-kicker {
+    color: var(--gold);
+    font: 850 11px/1 var(--mono);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .onboarding-box h2 {
+    margin-top: 10px;
+  }
+
+  .onboarding-rules {
+    display: grid;
+    gap: 10px;
+    margin: 18px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .onboarding-rules li {
+    display: grid;
+    grid-template-columns: 34px 1fr;
+    gap: 10px;
+    align-items: start;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: rgba(244, 242, 234, 0.055);
+    padding: 11px;
+  }
+
+  .onboarding-rules b {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    background: rgba(228, 184, 78, 0.16);
+    color: #f4d47a;
+    font: 900 15px/1 var(--mono);
+  }
+
+  .onboarding-rules strong {
+    display: block;
+    font-size: 15px;
+    line-height: 1.15;
+  }
+
+  .onboarding-rules span {
+    display: block;
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  .onboarding-example {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-top: 18px;
+    border-top: 1px solid var(--line);
+    padding-top: 16px;
+  }
+
+  .example-tile {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border: 1px solid rgba(22, 25, 20, 0.28);
+    border-radius: 8px;
+    background: var(--tile);
+    color: var(--tile-ink);
+    font: 950 20px/1 var(--sans);
+  }
+
+  .example-tile.gold { background: #f1cc62; color: #5d4200; }
+  .example-tile.green { background: #79bd7d; color: #102012; }
+
+  .onboarding-actions {
+    display: flex;
+    justify-content: end;
+    gap: 10px;
+    margin-top: 20px;
+  }
+
   .upgrade-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -488,6 +599,12 @@
   }
 
   @media (max-width: 1180px) {
+    .help-btn {
+      top: auto;
+      right: 18px;
+      bottom: 18px;
+    }
+
     .topbar {
       flex-direction: column;
       right: auto;
@@ -518,11 +635,13 @@
     .tray { padding: 12px; }
     .die-current { font-size: 36px; }
     .die-faces { font-size: 8px; }
+    .onboarding-actions { display: grid; }
   }
 </style>
 </head>
 <body>
   <div id="app"></div>
+  <button class="help-btn" id="helpBtn" type="button" aria-label="How to play">?</button>
 
   <header class="topbar">
     <section class="brand">
@@ -572,8 +691,35 @@
     </div>
   </div>
 
+  <div class="modal" id="onboardingModal" role="dialog" aria-modal="true" aria-labelledby="onboardingTitle">
+    <div class="modal-box onboarding-box">
+      <div class="onboarding-kicker">Daily word dice</div>
+      <h2 id="onboardingTitle">Lexicon</h2>
+      <p>Roll a handful of persistent dice into letters, then spend every die to build one connected crossword.</p>
+      <ol class="onboarding-rules">
+        <li><b>1</b><div><strong>Roll your dice.</strong><span>Each die lands on one letter for the round.</span></div></li>
+        <li><b>2</b><div><strong>Drag every die.</strong><span>Use the whole roll on the 3D board.</span></div></li>
+        <li><b>3</b><div><strong>Make real words.</strong><span>Runs of 3 or more score when the board is connected.</span></div></li>
+      </ol>
+      <div class="onboarding-example" aria-label="Example letters">
+        <span class="example-tile green">C</span>
+        <span class="example-tile gold">A</span>
+        <span class="example-tile">R</span>
+        <span class="example-tile">T</span>
+        <span class="example-tile">R</span>
+        <span class="example-tile">T</span>
+        <span class="example-tile">E</span>
+        <span class="example-tile">A</span>
+      </div>
+      <div class="onboarding-actions">
+        <button class="btn" id="onboardingCloseBtn" type="button">Close</button>
+        <button class="btn primary" id="onboardingPlayBtn" type="button">Play</button>
+      </div>
+    </div>
+  </div>
+
   <script src="enable-words.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script type="module" src="./src/main.js"></script>
+  <script type="module" src="./src/main.js?v=intro-onboarding"></script>
 </body>
 </html>

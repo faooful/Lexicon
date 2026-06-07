@@ -19,10 +19,11 @@ import {
   scoreBoardForState,
   validateBoardForState
 } from "./rules.js";
-import { createBaseDice, createInitialState, emptyBoard, rollDice as rollDiceForState } from "./state.js";
+import { createBaseDice, createInitialState, createStarterRoll, emptyBoard, rollDice as rollDiceForState } from "./state.js?v=intro-onboarding";
 
 const WORDS = new Set(window.LEXICON_WORDS || []);
 const WORDS_BY_LETTER = buildWordsByLetter(WORDS);
+const ONBOARDING_KEY = "lexicon.onboardingSeen.v1";
 
 const els = {
   app: document.getElementById("app"),
@@ -37,10 +38,14 @@ const els = {
   reroll: document.getElementById("rerollBtn"),
   clear: document.getElementById("clearBtn"),
   newRun: document.getElementById("newRunBtn"),
+  help: document.getElementById("helpBtn"),
 
   modal: document.getElementById("upgradeModal"),
   upgradeGrid: document.getElementById("upgradeGrid"),
   upgradeSummary: document.getElementById("upgradeSummary"),
+  onboardingModal: document.getElementById("onboardingModal"),
+  onboardingPlay: document.getElementById("onboardingPlayBtn"),
+  onboardingClose: document.getElementById("onboardingCloseBtn"),
   perspBtn: document.getElementById("perspBtn"),
   resetCamBtn: document.getElementById("resetCamBtn")
 };
@@ -418,18 +423,58 @@ let rollAnimationSerial = 0;
 const trayButtons = new Map();
 const boardPiecesByKey = new Map();
 
-function newRun() {
-  state = createInitialState(baseDice);
-  startRound();
+function hasSeenOnboarding() {
+  try {
+    return window.localStorage.getItem(ONBOARDING_KEY) === "true";
+  } catch {
+    return false;
+  }
 }
 
-function startRound() {
+function markOnboardingSeen() {
+  try {
+    window.localStorage.setItem(ONBOARDING_KEY, "true");
+  } catch {
+    // Private browsing or blocked storage should not prevent play.
+  }
+}
+
+function showOnboarding(options = {}) {
+  const { helpOnly = false } = options;
+  els.onboardingModal.dataset.mode = helpOnly ? "help" : "start";
+  els.onboardingPlay.textContent = helpOnly ? "Close" : "Play";
+  els.onboardingClose.hidden = true;
+  els.onboardingModal.classList.add("show");
+}
+
+function hideOnboardingAndStart() {
+  const helpOnly = els.onboardingModal.dataset.mode === "help";
+  els.onboardingModal.classList.remove("show");
+  if (helpOnly) return;
+  markOnboardingSeen();
+  newRun({ starter: true });
+}
+
+function prepareOnboardingState() {
+  state = createInitialState(baseDice);
+  renderAll();
+  setStatus("Welcome", "Press Play to roll a starter hand and build your first crossword.", "ready");
+}
+
+function newRun(options = {}) {
+  const { starter = false } = options;
+  state = createInitialState(baseDice);
+  startRound({ starter });
+}
+
+function startRound(options = {}) {
+  const { starter = false } = options;
   state.board = emptyBoard();
   state.locked = false;
   state.isRolling = false;
   state.selectedWildIndex = null;
   state.rerolls = state.rerollsBase;
-  state.roll = rollDiceForState(state);
+  state.roll = starter ? createStarterRoll(state) : rollDiceForState(state);
   state.lastValidation = null;
   state.lastScore = null;
   els.modal.classList.remove("show");
@@ -1127,7 +1172,12 @@ function updateStatus(validation) {
   if (state.locked) return;
   if (state.isRolling) return setStatus("Rolling dice", "Your letters are landing below the board.", "ready");
   if (validation.complete) return setStatus("Valid board", "The crossword locks automatically. Choose an upgrade.", "good");
-  if (validation.unused > 0) return setStatus(`${validation.unused} dice left`, "Same dice, new faces. Drag every rolled die onto the board.", "ready");
+  if (validation.unused > 0 && validation.placed.length === 0) {
+    return setStatus(`${validation.unused} dice to place`, "Drag every rolled die onto the board.", "ready");
+  }
+  if (validation.unused > 0) {
+    return setStatus("Build one crossword", "Keep the dice connected and make runs of 3 or more letters.", "ready");
+  }
   if (!validation.connected) return setStatus("Disconnected", "All placed dice must touch the same crossword.", "bad");
   if (validation.fragments.length) return setStatus("Fragment found", "Two-letter runs are not words. Break or extend them.", "bad");
   if (validation.invalidWords.length) return setStatus("Unknown word", `${validation.invalidWords[0].text} is not in the dictionary.`, "bad");
@@ -1360,6 +1410,9 @@ window.addEventListener("keydown", event => {
 els.reroll.addEventListener("click", reroll);
 els.clear.addEventListener("click", clearBoard);
 els.newRun.addEventListener("click", newRun);
+els.help.addEventListener("click", () => showOnboarding({ helpOnly: true }));
+els.onboardingPlay.addEventListener("click", hideOnboardingAndStart);
+els.onboardingClose.addEventListener("click", () => els.onboardingModal.classList.remove("show"));
 
 function randomDie() {
   return state.dice[Math.floor(Math.random() * state.dice.length)];
@@ -1426,5 +1479,10 @@ els.resetCamBtn.addEventListener("click", () => {
 
 buildBoard();
 onResize();
-newRun();
+if (hasSeenOnboarding()) {
+  newRun();
+} else {
+  prepareOnboardingState();
+  showOnboarding();
+}
 requestAnimationFrame(animate);
