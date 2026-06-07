@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { createBaseDice, createInitialState, emptyBoard } from "../src/state.js";
+import { createBaseDice, createInitialState, createStarterRoll, emptyBoard, STARTER_ROLL_LETTERS } from "../src/state.js";
 import {
   buildWordsByLetter,
   checkFeasibilityForState,
@@ -28,6 +28,12 @@ function place(state, r, c, letter, rollIndex = state.roll.length) {
   };
   state.roll[rollIndex] = die;
   state.board[r][c] = { ...die, rollIndex, dieFaces: [letter] };
+}
+
+function placeRolledDie(state, rollIndex, r, c) {
+  const die = state.roll[rollIndex];
+  die.used = true;
+  state.board[r][c] = { ...die, rollIndex, dieFaces: [die.letter] };
 }
 
 test("extractWords returns horizontal and vertical runs of at least two cells", () => {
@@ -106,4 +112,42 @@ test("checkFeasibility flags unused non-wild dice that cannot form any candidate
   const stuck = checkFeasibilityForState(state, buildWordsByLetter(new Set(["AT"])));
 
   assert.deepEqual(stuck, [0]);
+});
+
+test("createStarterRoll returns valid unused roll items from the starting dice", () => {
+  const state = createInitialState(createBaseDice());
+  const roll = createStarterRoll(state);
+
+  assert.equal(roll.length, state.dice.length);
+  assert.deepEqual(roll.map(die => die.letter), STARTER_ROLL_LETTERS);
+  roll.forEach((die, index) => {
+    assert.equal(die.face, STARTER_ROLL_LETTERS[index]);
+    assert.equal(die.assigned, STARTER_ROLL_LETTERS[index]);
+    assert.equal(die.used, false);
+    assert.equal(state.dice[index].faces.includes(die.letter), true);
+  });
+});
+
+test("starter roll supports a complete CART, ART, and TEA crossword", () => {
+  const state = createInitialState(createBaseDice());
+  state.roll = createStarterRoll(state);
+  state.board = emptyBoard();
+
+  placeRolledDie(state, 2, 1, 0); // C
+  placeRolledDie(state, 0, 1, 1); // A
+  placeRolledDie(state, 3, 1, 2); // R
+  placeRolledDie(state, 1, 1, 3); // T
+  placeRolledDie(state, 6, 2, 1); // R
+  placeRolledDie(state, 7, 3, 1); // T
+  placeRolledDie(state, 4, 2, 3); // E
+  placeRolledDie(state, 5, 3, 3); // A
+
+  const validation = validateBoardForState(state, new Set(["CART", "ART", "TEA"]));
+  const score = scoreBoardForState(state, validation);
+
+  assert.equal(validation.complete, true);
+  assert.deepEqual(validation.words.map(word => word.text).sort(), ["ART", "CART", "TEA"]);
+  assert.equal(score.wordPoints, 34);
+  assert.equal(score.intersectionPoints, 6);
+  assert.equal(score.total, 40);
 });
