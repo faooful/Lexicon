@@ -40,8 +40,7 @@
 
   button { border: 0; font: inherit; }
   #app { position: fixed; inset: 0; z-index: 1; }
-  canvas { display: block; cursor: grab; }
-  canvas.dragging { cursor: grabbing; }
+  canvas { display: block; cursor: default; }
   canvas.placing { cursor: copy; }
 
   .cam-btns {
@@ -233,6 +232,7 @@
   .die.used {
     opacity: 0;
     cursor: default;
+    pointer-events: none;
   }
 
   .die.stuck {

@@ -5,7 +5,6 @@ export const DOCK_Y = TOP_H + 1.18;
 export const DRAG_Y = TOP_H + 1.42;
 export const DOCK_SCALE = 0.86;
 export const DIRT_H = 0.42;
-export const DRAG_THRESHOLD = 5;
 export const ROLL_ANIMATION_MS = 2000;
 export const DEFAULT_POLAR = 0.52;
 export const DEFAULT_AZIMUTH = Math.PI * 0.25;

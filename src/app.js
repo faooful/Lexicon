@@ -7,7 +7,6 @@ import {
   DIRT_H,
   DOCK_SCALE,
   DOCK_Y,
-  DRAG_THRESHOLD,
   DRAG_Y,
   LETTERS,
   ROLL_ANIMATION_MS,
@@ -61,6 +60,8 @@ let viewSize = 5.8;
 let azimuth = Math.PI * 0.25;
 let polar = 0.52;
 const target = new THREE.Vector3(0, 0, 0);
+const cameraPan = new THREE.Vector3(0, 0, 0);
+const desiredCameraPan = new THREE.Vector3(0, 0, 0);
 const aspect0 = window.innerWidth / window.innerHeight;
 const camera = new THREE.OrthographicCamera(-viewSize * aspect0, viewSize * aspect0, viewSize, -viewSize, 0.1, 200);
 const perspCamera = new THREE.PerspectiveCamera(48, aspect0, 0.1, 200);
@@ -68,6 +69,7 @@ let usePerspective = false;
 
 function updateCamera() {
   const r = 12;
+  target.copy(cameraPan);
   const cx = target.x + r * Math.sin(polar) * Math.cos(azimuth);
   const cy = target.y + r * Math.cos(polar);
   const cz = target.z + r * Math.sin(polar) * Math.sin(azimuth);
@@ -257,21 +259,122 @@ const dragPoint = new THREE.Vector3();
 const homePoint = new THREE.Vector3();
 const screenWorldPoint = new THREE.Vector3();
 const screenWorldDir = new THREE.Vector3();
+const screenPoint = new THREE.Vector3();
 
-function pickTile(clientX, clientY) {
-  ndc.x = (clientX / window.innerWidth) * 2 - 1;
-  ndc.y = -(clientY / window.innerHeight) * 2 + 1;
-  raycaster.setFromCamera(ndc, usePerspective ? perspCamera : camera);
-  const hits = raycaster.intersectObjects(tileGroup.children, true);
-  for (const hit of hits) {
-    let n = hit.object;
-    while (n && n.userData.gx === undefined) n = n.parent;
-    if (n && n.userData.gx !== undefined) return { c: n.userData.gx, r: n.userData.gz };
+function resolvePointerBoardTarget(clientX, clientY) {
+  const visualTarget = resolveScreenBoardTarget(clientX, clientY, "pointer", { maxNearestDistance: 68 });
+  if (visualTarget) return visualTarget;
+
+  const point = pointerToPlanePoint(clientX, clientY, TOP_H + 0.02, homePoint);
+  if (!point) return null;
+  return resolveWorldBoardTarget(point, "pointer");
+}
+
+function resolveDragBoardTarget() {
+  if (!drag?.object) return null;
+  const projected = projectWorldToScreen(drag.object.position, screenPoint);
+  return resolveScreenBoardTarget(projected.x, projected.y, "drag", { maxNearestDistance: 92 })
+    || resolveWorldBoardTarget(drag.object.position, "drag");
+}
+
+function resolveDropBoardTarget(clientX, clientY) {
+  return resolveDragBoardTarget() || resolvePointerBoardTarget(clientX, clientY);
+}
+
+function resolveWorldBoardTarget(point, source) {
+  const c = Math.floor(point.x + BOARD_SIZE / 2);
+  const r = Math.floor(point.z + BOARD_SIZE / 2);
+  if (r < 0 || r >= BOARD_SIZE || c < 0 || c >= BOARD_SIZE) return null;
+  return createBoardTarget(r, c, source);
+}
+
+function resolveScreenBoardTarget(clientX, clientY, source, options = {}) {
+  const { maxNearestDistance = 68, occupiedOnly = false } = options;
+  let nearest = null;
+  let nearestDistance = Infinity;
+
+  for (let r = 0; r < BOARD_SIZE; r++) {
+    for (let c = 0; c < BOARD_SIZE; c++) {
+      const occupied = Boolean(state.board?.[r]?.[c]);
+      if (occupiedOnly && !occupied) continue;
+
+      const corners = projectedTileCorners(c, r);
+      if (pointInPolygon(clientX, clientY, corners)) return createBoardTarget(r, c, source);
+
+      const center = projectWorldToScreen(tileCenter(c, r), screenPoint);
+      const distance = Math.hypot(clientX - center.x, clientY - center.y);
+      if (distance < nearestDistance) {
+        nearestDistance = distance;
+        nearest = { r, c };
+      }
+    }
+  }
+
+  if (nearest && nearestDistance <= maxNearestDistance) {
+    return createBoardTarget(nearest.r, nearest.c, source);
   }
   return null;
 }
 
+function projectedTileCorners(c, r) {
+  const center = tileCenter(c, r);
+  return [
+    projectWorldToScreen(new THREE.Vector3(center.x - 0.5, center.y, center.z - 0.5)),
+    projectWorldToScreen(new THREE.Vector3(center.x + 0.5, center.y, center.z - 0.5)),
+    projectWorldToScreen(new THREE.Vector3(center.x + 0.5, center.y, center.z + 0.5)),
+    projectWorldToScreen(new THREE.Vector3(center.x - 0.5, center.y, center.z + 0.5))
+  ];
+}
+
+function tileCenter(c, r) {
+  const center = tilePos(c, r);
+  center.y = TOP_H + 0.06;
+  return center;
+}
+
+function projectWorldToScreen(point, out = new THREE.Vector3()) {
+  const activeCamera = usePerspective ? perspCamera : camera;
+  out.copy(point).project(activeCamera);
+  out.x = (out.x * 0.5 + 0.5) * window.innerWidth;
+  out.y = (-out.y * 0.5 + 0.5) * window.innerHeight;
+  return out;
+}
+
+function pointInPolygon(x, y, points) {
+  let inside = false;
+  for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
+    const xi = points[i].x, yi = points[i].y;
+    const xj = points[j].x, yj = points[j].y;
+    const intersects = ((yi > y) !== (yj > y)) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
+    if (intersects) inside = !inside;
+  }
+  return inside;
+}
+
+function createBoardTarget(r, c, source) {
+  return {
+    c,
+    r,
+    source,
+    occupied: Boolean(state.board?.[r]?.[c]),
+    cell: state.board?.[r]?.[c] || null
+  };
+}
+
 function pickPlacedPiece(clientX, clientY) {
+  const occupiedTarget = resolveScreenBoardTarget(clientX, clientY, "placed", {
+    maxNearestDistance: 118,
+    occupiedOnly: true
+  });
+  if (occupiedTarget?.cell) {
+    return { ...occupiedTarget.cell, r: occupiedTarget.r, c: occupiedTarget.c };
+  }
+
+  const target = resolvePointerBoardTarget(clientX, clientY);
+  if (target?.cell) {
+    return { ...target.cell, r: target.r, c: target.c };
+  }
+
   ndc.x = (clientX / window.innerWidth) * 2 - 1;
   ndc.y = -(clientY / window.innerHeight) * 2 + 1;
   raycaster.setFromCamera(ndc, usePerspective ? perspCamera : camera);
@@ -310,9 +413,6 @@ const baseDice = createBaseDice();
 
 let state = {};
 let drag = null;
-let pointerDown = null;
-let didOrbitDrag = false;
-let lastPointer = null;
 let currentHover = null;
 let rollAnimationSerial = 0;
 const trayButtons = new Map();
@@ -370,6 +470,7 @@ function renderDiceTray() {
     const btn = getTrayButton(die, index);
     btn.className = `die${die.face === "*" ? " wild" : ""}${source?.wild ? " has-wild" : ""}${isMutated ? " mutated" : ""}${die.used ? " used" : ""}${drag?.rollIndex === index ? " dragging" : ""}${state.stuckDice?.includes(index) ? " stuck" : ""}`;
     btn.disabled = state.isRolling || die.used || state.locked;
+    btn.style.pointerEvents = die.used ? "none" : "";
     btn.title = `D${die.dieId}: ${faceText}`;
     btn.style.left = `${hitbox.left}px`;
     btn.style.top = `${hitbox.top}px`;
@@ -916,29 +1017,29 @@ function tickDragObject(dt) {
 window.addEventListener("pointermove", event => {
   if (!drag) return;
   updateDragTarget(event.clientX, event.clientY);
-  updateHover(event.clientX, event.clientY);
+  updateHover();
 });
 
 window.addEventListener("pointerup", event => {
   if (!drag) return;
-  const cell = pickTile(event.clientX, event.clientY);
+  const target = resolveDropBoardTarget(event.clientX, event.clientY);
   const activeDrag = drag;
   if (activeDrag.type === "board") {
-    endDrag({ restore: !cell });
-    finishBoardDieDrag(activeDrag, cell);
+    endDrag({ restore: !target });
+    finishBoardDieDrag(activeDrag, target);
   } else {
-    if (!cell) {
+    if (!target) {
       endDrag({ restore: true });
       setStatus("Drop cancelled", "Release over an empty board tile to place a die.", "ready");
       return;
     }
-    if (state.board[cell.r][cell.c]) {
+    if (target.occupied) {
       endDrag({ restore: true });
-      placeDie(activeDrag.rollIndex, cell.r, cell.c);
+      placeDie(activeDrag.rollIndex, target.r, target.c);
       return;
     }
     endDrag({ restore: false });
-    placeDie(activeDrag.rollIndex, cell.r, cell.c);
+    placeDie(activeDrag.rollIndex, target.r, target.c);
   }
 });
 
@@ -1198,16 +1299,32 @@ function clearBoard() {
 
 
 function updateHover(x, y) {
-  const cell = pickTile(x, y);
-  currentHover = cell;
-  if (!cell) {
+  const target = drag ? resolveDragBoardTarget() : resolvePointerBoardTarget(x, y);
+  currentHover = target;
+  if (!target) {
     hoverMesh.visible = false;
     return;
   }
-  const p = tilePos(cell.c, cell.r);
+  const p = tilePos(target.c, target.r);
   hoverMesh.position.set(p.x, TOP_H + 0.035, p.z);
-  hoverMesh.material = state.board[cell.r][cell.c] ? M.hoverBad : M.hover;
+  hoverMesh.material = target.occupied ? M.hoverBad : M.hover;
   hoverMesh.visible = true;
+}
+
+function updateCameraPanTarget(clientX, clientY) {
+  const nx = (clientX / window.innerWidth - 0.5) * 2;
+  const ny = (clientY / window.innerHeight - 0.5) * 2;
+  desiredCameraPan.set(nx * 0.22, 0, ny * 0.16);
+}
+
+function tickCameraPan(dt) {
+  if (drag) return;
+  const beforeX = cameraPan.x;
+  const beforeZ = cameraPan.z;
+  cameraPan.lerp(desiredCameraPan, Math.min(1, dt * 1.45));
+  if (Math.abs(cameraPan.x - beforeX) > 0.0001 || Math.abs(cameraPan.z - beforeZ) > 0.0001) {
+    updateCamera();
+  }
 }
 
 renderer.domElement.addEventListener("pointerdown", event => {
@@ -1218,40 +1335,12 @@ renderer.domElement.addEventListener("pointerdown", event => {
     beginBoardDieDrag(event, placed);
     return;
   }
-  pointerDown = { x: event.clientX, y: event.clientY };
-  lastPointer = { x: event.clientX, y: event.clientY };
-  didOrbitDrag = false;
-  renderer.domElement.classList.add("dragging");
-  renderer.domElement.setPointerCapture(event.pointerId);
 });
 
 renderer.domElement.addEventListener("pointermove", event => {
+  updateCameraPanTarget(event.clientX, event.clientY);
   if (drag) return;
   updateHover(event.clientX, event.clientY);
-  if (!pointerDown) return;
-  const dx = event.clientX - pointerDown.x;
-  const dy = event.clientY - pointerDown.y;
-  if (!didOrbitDrag && Math.abs(dx) + Math.abs(dy) > DRAG_THRESHOLD) didOrbitDrag = true;
-  if (didOrbitDrag) {
-    const ddx = event.clientX - lastPointer.x;
-    const ddy = event.clientY - lastPointer.y;
-    azimuth -= ddx * 0.008;
-    polar = Math.max(0.18, Math.min(1.35, polar - ddy * 0.006));
-    updateCamera();
-  }
-  lastPointer = { x: event.clientX, y: event.clientY };
-});
-
-renderer.domElement.addEventListener("pointerup", event => {
-  renderer.domElement.classList.remove("dragging");
-  pointerDown = null;
-  lastPointer = null;
-});
-
-renderer.domElement.addEventListener("pointercancel", () => {
-  renderer.domElement.classList.remove("dragging");
-  pointerDown = null;
-  lastPointer = null;
 });
 
 renderer.domElement.addEventListener("wheel", event => {
@@ -1312,6 +1401,7 @@ function animate(now) {
   if (dropAnims.length) tickDropAnims(dt);
   if (dockAnims.length) tickDockAnims(dt);
   if (drag) tickDragObject(dt);
+  tickCameraPan(dt);
   tickDockIdle(now);
   if (state.isRolling) tickRollStage(now);
   renderer.render(scene, usePerspective ? perspCamera : camera);
@@ -1329,6 +1419,8 @@ els.resetCamBtn.addEventListener("click", () => {
   polar = DEFAULT_POLAR;
   azimuth = DEFAULT_AZIMUTH;
   viewSize = DEFAULT_VIEW_SIZE;
+  cameraPan.set(0, 0, 0);
+  desiredCameraPan.set(0, 0, 0);
   onResize();
 });
 
